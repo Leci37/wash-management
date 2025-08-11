@@ -9,6 +9,8 @@ import { confirmSavedChanges } from './core/guard/unsavedChanges';
 import { Buscar } from './modules/buscar/pages/buscar/buscar';
 import { BuscarList } from './modules/buscar/pages/buscar-list/buscar-list';
 import { ApiTest } from './modules/api-test/api-test';
+import { AuthGuard } from './core/guard/auth.guard';
+import { RoleGuard } from './core/guard/role.guard';
 
 export enum NavigationRoutes {
   Inicio = 'inicio',
@@ -21,52 +23,42 @@ export enum NavigationRoutes {
   Perfil = 'perfil',
 }
 export const routes: Routes = [
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./modules/auth/login/login.component').then(
+        (m) => m.LoginComponent,
+      ),
+  },
   { path: 'api-test', component: ApiTest },
   {
     path: '',
     component: Shell,
-    // canActivate: [AuthGuard],
+    canActivate: [AuthGuard],
     children: [
-      {
-        path: NavigationRoutes.Inicio,
-        component: Inicio,
-      },
-      {
-        path: NavigationRoutes.Buscar,
-        // canActivate: [AuthGuard],
-        // data: { roles: ROLES_DIREC_RRHH },
-        // loadChildren: () =>
-        //   import('@modules/home/home.routing').then((m) => m.HOME_ROUTES),
-        component: Buscar,
-      },
-      {
-        path: NavigationRoutes.Buscar_List,
-        component: BuscarList,
-      },
+      { path: NavigationRoutes.Inicio, component: Inicio },
+      { path: NavigationRoutes.Buscar, component: Buscar },
+      { path: NavigationRoutes.Buscar_List, component: BuscarList },
       {
         path: NavigationRoutes.Nuevo,
         component: Nuevo,
         canDeactivate: [confirmSavedChanges],
       },
-      {
-        path: NavigationRoutes.Finalizar,
-        component: FinalizarMenu,
-      },
+      { path: NavigationRoutes.Finalizar, component: FinalizarMenu },
       {
         path: `${NavigationRoutes.Finalizar}/:maq`,
         component: Finalizar,
         canDeactivate: [confirmSavedChanges],
       },
-      {
-        path: NavigationRoutes.Perfil,
-        component: Perfil,
-      },
-      // {
-      //   path: 'perfil',
-      //   loadChildren: () =>
-      //     import('./modules/perfil/perfil.routes').then((m) => m.PERFIL_ROUTES),
-      // },
+      { path: NavigationRoutes.Perfil, component: Perfil },
     ],
   },
-  { path: '**', redirectTo: '' },
+  {
+    path: 'unauthorized',
+    loadComponent: () =>
+      import('./shared/components/unauthorized/unauthorized.component').then(
+        (m) => m.UnauthorizedComponent,
+      ),
+  },
+  { path: '**', redirectTo: 'login' },
 ];
