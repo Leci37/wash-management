@@ -7,7 +7,7 @@ namespace Controlmat.Domain.Entities
         public string? PasswordHash { get; set; }
         public string Role { get; set; } = "WarehouseUser";
         public bool IsActive { get; set; } = true;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; }
         public DateTime? LastLogin { get; set; }
 
         // Navigation properties

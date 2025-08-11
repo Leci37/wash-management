@@ -23,7 +23,10 @@ namespace Controlmat.Infrastructure.Persistence
                 entity.Property(e => e.UserName).HasMaxLength(100).IsRequired();
                 entity.Property(e => e.Role).HasMaxLength(50).IsRequired();
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
-                entity.Property(e => e.CreatedAt).IsRequired();
+                entity.Property(e => e.CreatedAt)
+                    .IsRequired()
+                    .HasDefaultValueSql("GETDATE()")
+                    .ValueGeneratedOnAdd();
                 entity.Property(e => e.LastLogin);
             });
 
