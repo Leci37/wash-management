@@ -1,4 +1,7 @@
 using Serilog;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
+using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,5 +30,26 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Display registered routes on startup in a distinct color
+var endpointSources = app.Services.GetRequiredService<IEnumerable<EndpointDataSource>>();
+var routes = endpointSources
+    .SelectMany(source => source.Endpoints)
+    .OfType<RouteEndpoint>()
+    .Select(endpoint => new
+    {
+        Pattern = endpoint.RoutePattern.RawText,
+        Methods = endpoint.Metadata
+            .OfType<HttpMethodMetadata>()
+            .FirstOrDefault()?.HttpMethods ?? Array.Empty<string>()
+    });
+
+Console.ForegroundColor = ConsoleColor.Cyan;
+Console.WriteLine("Registered endpoints:");
+foreach (var route in routes)
+{
+    Console.WriteLine($"  [{string.Join(',', route.Methods)}] /{route.Pattern}");
+}
+Console.ResetColor();
 
 app.Run();
