@@ -1,4 +1,10 @@
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((ctx, lc) => lc
+    .WriteTo.Console()
+    .Enrich.WithEnvironmentUserName());
 
 // Add services to the container.
 
