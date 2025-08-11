@@ -4,6 +4,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Controlmat.Domain.Interfaces;
+using BC = BCrypt.Net.BCrypt;
+
 
 namespace Controlmat.Infrastructure.Services
 {
@@ -53,14 +55,14 @@ namespace Controlmat.Infrastructure.Services
 
         public bool ValidatePassword(string password, string hash)
         {
-            // TODO: Implement proper password hashing validation
-            return true;
+            if (string.IsNullOrEmpty(hash)) return false;
+            return BC.Verify(password, hash);
         }
 
         public string HashPassword(string password)
         {
-            // TODO: Implement proper password hashing
-            return password;
+
+            return BC.HashPassword(password);
         }
     }
 }
