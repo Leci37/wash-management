@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Serilog;
+using Serilog.Enrichers;
 using Controlmat.Application;
 using Controlmat.Infrastructure;
 
