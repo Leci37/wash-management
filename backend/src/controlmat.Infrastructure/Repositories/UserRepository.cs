@@ -22,13 +22,13 @@ namespace Controlmat.Infrastructure.Repositories
         public async Task<User?> GetByUserNameAsync(string userName)
         {
             return await _context.Users
-                .FirstOrDefaultAsync(u => u.UserName == userName && u.IsActive);
+                .FirstOrDefaultAsync(u => u.UserName == userName && (u.IsActive ?? true));
         }
 
         public async Task<IEnumerable<User>> GetAllActiveAsync()
         {
             return await _context.Users
-                .Where(u => u.IsActive)
+                .Where(u => u.IsActive ?? true)
                 .OrderBy(u => u.UserName)
                 .ToListAsync();
         }
@@ -36,7 +36,7 @@ namespace Controlmat.Infrastructure.Repositories
         public async Task<IEnumerable<User>> GetByRoleAsync(string role)
         {
             return await _context.Users
-                .Where(u => u.Role == role && u.IsActive)
+                .Where(u => u.Role == role && (u.IsActive ?? true))
                 .OrderBy(u => u.UserName)
                 .ToListAsync();
         }
