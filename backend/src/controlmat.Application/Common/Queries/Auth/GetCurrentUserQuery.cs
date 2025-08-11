@@ -34,7 +34,7 @@ namespace Controlmat.Application.Common.Queries.Auth
                     UserId = user.UserId,
                     UserName = user.UserName,
                     Role = user.Role,
-                    IsActive = user.IsActive,
+                    IsActive = user.IsActive ?? true,
                     LastLogin = user.LastLogin,
                     Permissions = GetPermissions(user.Role)
                 };
