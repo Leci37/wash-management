@@ -40,7 +40,7 @@ namespace Controlmat.Application.Common.Commands.Auth
                 {
                     var user = await _userRepo.GetByUserNameAsync(request.Credentials.UserName);
 
-                    if (user == null || !user.IsActive)
+                    if (user == null || user.IsActive == false)
                     {
                         _logger.LogWarning("{Function} [Thread:{ThreadId}] - INVALID USER. User: {UserName}",
                             function, threadId, request.Credentials.UserName);
