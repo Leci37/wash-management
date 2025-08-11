@@ -1,0 +1,89 @@
+
+# ✅ Gestraf_base.architecture.txt
+# Purpose: Define the backend architecture structure used in the 'controlmat' project based on the Gestraf solution.
+# Use this file to guide the GPT agent in generating consistent, modular backend logic aligned with this architecture.
+
+📁 Project Root: controlmat/
+└── src/
+    ├── controlmat.Api/              # API layer: Controllers, Program.cs, DI, Swagger
+    ├── controlmat.Application/      # CQRS layer: Commands, Queries, DTOs, Validators, MediatR handlers
+    ├── controlmat.Domain/           # Pure domain layer: Entities, Enums, Interfaces (no EF Core)
+    └── controlmat.Infrastructure/   # Persistence layer: DbContext, EF Core, Repositories, integrations
+
+----------------------------------------
+🧱 API Layer (controlmat.Api)
+----------------------------------------
+- Controllers go here, thin and focused on routing and delegation.
+- Inject IMediator for command handling.
+- Directly inject queries for reads (e.g., IUserQueries).
+- Swagger is registered via AddOpenApiDocument().
+- All DI setup is centralized in DependencyInjection.cs
+- Program.cs should call:
+    builder.Services.AddApplicationServices();
+    builder.Services.AddInfrastructureServices(builder.Configuration);
+    builder.Services.AddWebServices();
+
+----------------------------------------
+🧠 Application Layer (controlmat.Application)
+----------------------------------------
+- Organized by CQRS pattern:
+  • Commands: controlmat.Application.Common.Commands.{Feature}
+  • Queries:  controlmat.Application.Common.Queries.{Feature}
+  • DTOs:     controlmat.Application.Common.Dto
+  • Validators: FluentValidation validators per DTO
+- Use MediatR for command/query dispatching.
+- Commands/Queries may be structured as nested static classes with Request/Handler.
+- Business logic must be isolated in Handlers, not in controllers.
+
+----------------------------------------
+🏛️ Domain Layer (controlmat.Domain)
+----------------------------------------
+- Holds domain models, value objects, enums, and interfaces.
+- No service or EF Core logic.
+- Example: User.cs, Material.cs, IAssignmentRepository.cs
+
+----------------------------------------
+🗄️ Infrastructure Layer (controlmat.Infrastructure)
+----------------------------------------
+- EF Core DbContext: ControlmatDbContext.cs
+- Repository implementations for domain interfaces
+- Persistence logic and external services
+- Register all services via AddInfrastructureServices()
+
+----------------------------------------
+🔧 Technologies Used
+----------------------------------------
+- EF Core for persistence
+- MediatR for CQRS
+- FluentValidation for input validation
+- AutoMapper for DTO <-> Entity mapping (optional)
+- NSwag via AddOpenApiDocument for Swagger
+- Serilog-based logging via ConfigureLogger() in host builder
+
+----------------------------------------
+📌 Example Command Structure
+----------------------------------------
+public static class CreateUserCommand
+{
+    public class Request : IRequest<UserDto> { ... }
+    public class Handler : IRequestHandler<Request, UserDto> { ... }
+}
+
+----------------------------------------
+📌 Example Query Structure
+----------------------------------------
+public static class GetUsersQuery
+{
+    public class Request : IRequest<IEnumerable<UserDto>> { ... }
+    public class Handler : IRequestHandler<Request, IEnumerable<UserDto>> { ... }
+}
+
+----------------------------------------
+✅ Agent Instructions
+----------------------------------------
+When generating backend features for controlmat:
+- Respect Gestraf’s layered project layout and CQRS patterns
+- Use thin controllers with MediatR/Query injection
+- Organize files per feature into Commands, Queries, DTOs, Validators
+- Use DependencyInjection.cs for all service registrations
+- Keep Domain and Infrastructure clearly separated

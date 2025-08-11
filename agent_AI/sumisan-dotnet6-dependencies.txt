@@ -1,0 +1,25 @@
+# 📦 SUMISAN NuGet Dependencies for .NET 6 (Gestraf-Compliant)
+
+## controlmat.Api
+- Microsoft.EntityFrameworkCore.Design (6.0.25)
+- NSwag.AspNetCore (14.1.0)
+
+## controlmat.Domain
+- MediatR (12.3.0)
+
+## controlmat.Infrastructure
+- Azure.Identity (1.13.2)
+- DocumentFormat.OpenXml (3.3.0)
+- Microsoft.EntityFrameworkCore (6.0.25)
+- Microsoft.EntityFrameworkCore.SqlServer (6.0.25)
+- Microsoft.EntityFrameworkCore.Tools (6.0.25)
+- Microsoft.Extensions.Configuration.Binder (6.0.0)
+- Microsoft.Graph (5.77.0)
+
+## controlmat.Application
+- AutoMapper.Extensions.Microsoft.DependencyInjection (12.0.1)
+- FluentValidation (11.9.2)
+- FluentValidation.AspNetCore (11.3.0)
+- MediatR (12.3.0)
+- Serilog (4.0.0)
+- Serilog.AspNetCore (6.1.0)

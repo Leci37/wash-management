@@ -1,0 +1,50 @@
+✅ ERROR CODES BY ENDPOINT
+🔐 /api/auth/login
+Code	Meaning
+200 OK	Login successful
+400 Bad Request	Missing or invalid fields
+401 Unauthorized	Invalid username or password
+
+🚿 /api/washing (POST – start wash)
+Code	Meaning
+201 Created	Wash started successfully
+400 Bad Request	Missing prot, machineId, or userId
+409 Conflict	Max 2 active washes already running
+409 Conflict	Selected machine already in use
+
+🧺 /api/washing/{id}/finish (PUT – finish wash)
+Code	Meaning
+200 OK	Wash finalized successfully
+400 Bad Request	Missing userId or invalid input
+403 Forbidden	No photos uploaded for this wash
+404 Not Found	Wash does not exist
+409 Conflict	Wash is already finished
+
+📦 /api/washing/{id}/prots (POST – add prot)
+Code	Meaning
+201 Created	Prot added to wash
+400 Bad Request	Invalid prot format
+404 Not Found	Wash not found
+409 Conflict	Wash is already finished
+
+🖼️ /api/washing/{id}/photos (POST – upload photo)
+Code	Meaning
+201 Created	Photo uploaded successfully
+400 Bad Request	No file provided or unsupported format
+413 Payload Too Large	File exceeds max size
+404 Not Found	Wash not found
+409 Conflict	Max 99 photos already reached for this wash
+
+🔍 /api/washing/active (GET)
+Code	Meaning
+200 OK	Active washes returned (0–2 items)
+
+🧺 /api/machine or /api/user (GET)
+Code	Meaning
+200 OK	List returned
+
+✅ GLOBAL ERRORS
+Code	Cause
+401 Unauthorized	No JWT or invalid token
+403 Forbidden	Authenticated but not in allowed role
+500 Internal Server Error	Unhandled exception (log required)

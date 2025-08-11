@@ -47,12 +47,14 @@ namespace Controlmat.Application.Common.Commands.Auth
                         throw new UnauthorizedAccessException("Invalid credentials");
                     }
 
+
                     if (!_authService.ValidatePassword(request.Credentials.Password, user.PasswordHash ?? string.Empty))
                     {
                         _logger.LogWarning("{Function} [Thread:{ThreadId}] - INVALID PASSWORD. User: {UserName}",
                             function, threadId, request.Credentials.UserName);
                         throw new UnauthorizedAccessException("Invalid credentials");
                     }
+
 
                     var token = _authService.GenerateJwtToken(user.UserId, user.UserName, user.Role);
                     await _userRepo.UpdateLastLoginAsync(user.UserId);

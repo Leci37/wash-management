@@ -1,0 +1,81 @@
+# ✅ Gestraf-Aligned Validation Rules – SUMISAN Wash Management
+
+This file maps each DTO to its corresponding **FluentValidation validator** in the `Application.Common.Validators` namespace. These rules ensure that all incoming data is sanitized before it reaches the command/query handlers.
+
+All validators are registered via:
+
+```csharp
+services.AddValidatorsFromAssemblyContaining<NewWashValidator>();
+```
+
+---
+
+## 🔐 LoginRequestDtoValidator
+
+* `UserName`: Required, max length 100
+* `Password`: Required, min length 6
+
+---
+
+## 🚿 NewWashDtoValidator
+
+* `MachineId`: Required, must be 1 or 2
+* `StartUserId`: Required
+* `ProtEntries`: Required, count ≥ 1
+* `StartObservation`: Optional, max length 100
+
+---
+
+## 📦 AddProtDtoValidator
+
+* `WashingId`: Required
+* `ProtId`: Required, regex `^PROT[0-9]{3}$`
+* `BatchNumber`: Required, regex `^NL[0-9]{2}$`
+* `BagNumber`: Required, regex `^[0-9]{2}/[0-9]{2}$`
+
+---
+
+## 🧺 FinishWashDtoValidator
+
+* `EndUserId`: Required
+* `FinishObservation`: Optional, max length 100
+
+---
+
+## 🖼️ PhotoUploadDtoValidator
+
+* `File`: Required, type JPEG or PNG (content-type check)
+* File count ≤ 99 per wash (validated in `UploadPhotoCommand.Handler`)
+* Max file size ≤ 5MB (enforced via server config or file upload limit)
+
+---
+
+## 🧩 ParameterDtoValidator (if editable via admin forms)
+
+* `Name`: Required, max length 50
+* `Value`: Required, max length 255
+
+---
+
+## ⚠️ What’s Handled in Handlers (Not FluentValidation)
+
+| Rule                              | Enforced In                  |
+| --------------------------------- | ---------------------------- |
+| Max 2 active washes               | `StartWashCommand.Handler`   |
+| Machine not already in use        | `StartWashCommand.Handler`   |
+| ≥1 photo to finish                | `FinishWashCommand.Handler`  |
+| Prevent prot add to finished wash | `AddProtCommand.Handler`     |
+| Enforce photo naming sequence     | `UploadPhotoCommand.Handler` |
+
+---
+
+## ➕ What Could Be Added (Optional)
+
+* ✅ Duplicate `ProtId` check in `ProtEntries[]`
+* ✅ Enforce unique `BagNumber` per wash
+* ✅ Cross-field validation (e.g. `BagNumber` only valid if `BatchNumber` matches format)
+* ✅ Async DB checks (e.g., machine availability) → handled in handlers, not validators
+
+---
+
+FluentValidation is used only for syntactic, static field checks. All business-rule and state-based logic belongs in the respective `Command.Handler`.

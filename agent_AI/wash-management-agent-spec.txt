@@ -1,0 +1,155 @@
+# ✅ Wash Management Agent Spec – Gestraf Aligned (CQRS)
+
+This document rewrites the SUMISAN Wash Management agent spec to align with the **Gestraf architecture**, replacing layered service/repository logic with **CQRS-based Command/Query handlers**.
+
+---
+
+## 🧱 Project Structure
+
+```
+controlmat/
+└── src/
+    ├── controlmat.Api/              // API layer: controllers only
+    ├── controlmat.Application/      // CQRS: commands, queries, DTOs, validators
+    ├── controlmat.Domain/           // Domain entities, enums, interfaces (no EF logic)
+    └── controlmat.Infrastructure/   // EF Core, repositories, integrations
+```
+
+---
+
+## 📌 Domain Models (controlmat.Domain.Entities)
+
+* `User`: UserId, UserName, PasswordHash, Role
+* `Machine`: Id, Name
+* `Washing`: WashingId (YYMMDDXX), MachineId, Start/End Timestamps, UserIds, Status ('P' or 'F'), Observations
+* `Prot`: WashingId FK, ProtId, BatchNumber, BagNumber
+* `Photo`: WashingId FK, FilePath, FileName, CreatedAt
+* `Parameter`: Config settings (e.g., ImagePath)
+
+---
+
+## ✅ CQRS Command / Query Use Cases
+
+### 🧼 StartWashCommand
+
+* **DTO**: `NewWashDto`
+* **Handler Responsibilities**:
+
+  * Validate: Max 2 active washes, machine availability
+  * Ensure: ≥1 prot provided
+  * Generate WashingId in `YYMMDDXX` format
+  * Create `Washing` + `Prot[]`
+  * Save via `IWashingRepository`
+  * Return: `WashingResponseDto`
+
+### ✅ AddProtCommand
+
+* **DTO**: `AddProtDto`
+* **Handler Responsibilities**:
+
+  * Validate: Wash is in 'P' state
+  * Create new `Prot` linked to wash
+  * Persist via `IProtRepository`
+
+### 📷 UploadPhotoCommand
+
+* **DTO**: Multipart `PhotoUploadDto`
+* **Handler Responsibilities**:
+
+  * Validate: wash exists & is in-progress
+  * Check: photo count < 99
+  * Build file path: `{ImagePath}/{Year}/{WashingId}_{XX}.jpg`
+  * Save file, create `Photo`, store via `IPhotoRepository`
+
+### 🧺 FinishWashCommand
+
+* **DTO**: `FinishWashDto`
+* **Handler Responsibilities**:
+
+  * Validate: Wash is 'P'
+  * Check: ≥1 prot and ≥1 photo exists
+  * Update: Set `Status = 'F'`, timestamps, end user, observations
+  * Save via `IWashingRepository`
+
+### 🔍 GetActiveWashesQuery
+
+* **Returns**: List of `WashingResponseDto`
+* **Handler Responsibilities**:
+
+  * Query all washes where `Status = 'P'`
+  * Map entities to DTOs (with nested Prots)
+
+### 🔍 GetWashByIdQuery
+
+* **Returns**: Single `WashingResponseDto`
+* **Handler Responsibilities**:
+
+  * Load wash + related Prots + Photos
+  * Return full wash detail
+
+### 🔐 AuthenticateUserCommand
+
+* **DTO**: `LoginRequestDto`
+* **Handler Responsibilities**:
+
+  * Validate: username/password
+  * Issue JWT if successful
+
+---
+
+## 🧾 CQRS Component Placement
+
+| Feature           | Component Type | Location                                                   |
+| ----------------- | -------------- | ---------------------------------------------------------- |
+| Start Wash        | Command        | `Application.Common.Commands.Washing.StartWashCommand`     |
+| Add Prot          | Command        | `Application.Common.Commands.Washing.AddProtCommand`       |
+| Upload Photo      | Command        | `Application.Common.Commands.Washing.UploadPhotoCommand`   |
+| Finish Wash       | Command        | `Application.Common.Commands.Washing.FinishWashCommand`    |
+| Get Active Washes | Query          | `Application.Common.Queries.Washing.GetActiveWashesQuery`  |
+| Get by ID         | Query          | `Application.Common.Queries.Washing.GetWashByIdQuery`      |
+| Login             | Command        | `Application.Common.Commands.Auth.AuthenticateUserCommand` |
+
+---
+
+## 🧠 Validation Strategy
+
+* Validators live under `Application.Common.Validators`
+* Examples:
+
+  * `NewWashValidator`
+  * `AddProtValidator`
+  * `FinishWashValidator`
+* Enforced automatically via FluentValidation + `services.AddValidatorsFromAssemblyContaining<T>()`
+
+---
+
+## 🧾 Entity Relationship Summary
+
+```
+Washing
+ ├── 1:M → Prot
+ ├── 1:M → Photo
+ ├── M:1 → User (StartUserId / EndUserId)
+ └── M:1 → Machine
+```
+
+---
+
+## 🔒 Authorization Strategy
+
+* All endpoints use JWT + `[Authorize(Roles = "WarehouseUser")]`
+* Tokens generated in `AuthenticateUserCommand` using role claims
+
+---
+
+## ✅ Summary
+
+| Area                  | Old Architecture         | Gestraf Alignment                       |
+| --------------------- | ------------------------ | --------------------------------------- |
+| Controllers           | Services called directly | Use `IMediator.Send(...)` for all logic |
+| Business Logic        | WashService              | CQRS Handlers only                      |
+| Validation            | Manual or inline         | FluentValidation in Validators          |
+| Logging               | Optional or mixed        | Per-handler via `ILogger<T>`            |
+| Errors & Status Codes | Controller-driven        | Thrown/mapped in Handler                |
+
+This document defines a robust and testable CQRS-based backend, eliminating service bloat and enforcing proper separation per Gestraf principles.

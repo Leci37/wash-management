@@ -6,6 +6,7 @@ using System.Text;
 using Controlmat.Domain.Interfaces;
 using BC = BCrypt.Net.BCrypt;
 
+
 namespace Controlmat.Infrastructure.Services
 {
     public class AuthenticationService : IAuthenticationService
@@ -60,6 +61,7 @@ namespace Controlmat.Infrastructure.Services
 
         public string HashPassword(string password)
         {
+
             return BC.HashPassword(password);
         }
     }

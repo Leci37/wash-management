@@ -1,0 +1,107 @@
+🧩 LOGGING STRATEGY
+🔹 Purpose of Logging
+Logging provides:
+
+Traceability across service methods
+
+Debugging of validation, runtime, and business rule errors
+
+Auditability of system behavior (who did what and when)
+
+Operational health through logs stored in .log files
+
+🔹 Goals
+Each log entry should capture:
+
+The name of the function
+
+The Thread ID executing it
+
+The input data received (e.g., DTO)
+
+The output data returned
+
+Any exceptions or validation errors thrown
+
+🔧 SETUP IN Program.cs (Serilog)
+csharp
+Copiar
+Editar
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithThreadId()
+    .Enrich.WithEnvironmentUserName()
+    .WriteTo.Console()
+    .WriteTo.File("Logs/sumisan-log-.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+🔧 EXAMPLE SERVICE METHOD WITH LOGGING
+csharp
+Copiar
+Editar
+public class WashService : IWashService
+{
+    private readonly ILogger<WashService> _logger;
+
+    public WashService(ILogger<WashService> logger)
+    {
+        _logger = logger;
+    }
+
+    public async Task<WashDto> StartNewWash(NewWashDTO dto)
+    {
+        var function = nameof(StartNewWash);
+        var threadId = Thread.CurrentThread.ManagedThreadId;
+
+        _logger.LogInformation("🌀 {Function} [Thread:{ThreadId}] - STARTED. Input: {@DTO}", function, threadId, dto);
+
+        try
+        {
+            // Simulated business logic
+            var result = new WashDto
+            {
+                WashingId = 25080601,
+                Status = "P"
+            };
+
+            _logger.LogInformation("✅ {Function} [Thread:{ThreadId}] - COMPLETED. Output: {@Result}", function, threadId, result);
+            return result;
+        }
+        catch (ValidationException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ {Function} [Thread:{ThreadId}] - VALIDATION FAILED. Input: {@DTO}", function, threadId, dto);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ {Function} [Thread:{ThreadId}] - ERROR. Input: {@DTO}", function, threadId, dto);
+            throw;
+        }
+    }
+}
+🔍 LOG LEVELS
+Level	Purpose
+Information	Start/complete events
+Warning	Expected problems (e.g., invalid input)
+Error	Unexpected runtime errors
+
+📁 LOG OUTPUT FORMAT
+Saved as:
+
+bash
+Copiar
+Editar
+Logs/sumisan-log-2025-08-06.log
+Example entries:
+
+log
+Copiar
+Editar
+🌀 StartNewWash [Thread:14] - STARTED. Input: { MachineId = 1, StartUserId = 5 }
+✅ StartNewWash [Thread:14] - COMPLETED. Output: { WashingId = 25080601, Status = "P" }
+❌ StartNewWash [Thread:14] - ERROR. Input: {...}
+System.Exception: Machine already in use
+   at WashService.StartNewWash(...)
