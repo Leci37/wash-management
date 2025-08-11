@@ -402,6 +402,7 @@ A lightweight page is available for manual testing of the washing endpoints.
 
 ```bash
 cd frontend
+npm install      # install dependencies
 npm start
 ```
 
