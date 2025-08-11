@@ -1,0 +1,105 @@
+# ✅ Gestraf-Aligned Logging Strategy – SUMISAN Wash Management
+
+This logging strategy defines how to track and trace execution across **CQRS handlers** using `ILogger<T>` in the **Gestraf architecture**.
+
+---
+
+## 🎯 Logging Goals
+
+* Ensure traceability and observability of core operations
+* Detect and debug business rule failures and validation errors
+* Preserve structured logs for audit/compliance
+
+---
+
+## 🔧 Logger Injection in Handlers
+
+Each Command/Query Handler injects its own typed logger:
+
+```csharp
+public class Handler : IRequestHandler<Request, WashDto>
+{
+    private readonly ILogger<Handler> _logger;
+    public Handler(ILogger<Handler> logger) => _logger = logger;
+
+    public async Task<WashDto> Handle(Request request, CancellationToken ct)
+    {
+        var function = nameof(Handle);
+        var threadId = Thread.CurrentThread.ManagedThreadId;
+
+        _logger.LogInformation("🌀 {Function} [Thread:{ThreadId}] - STARTED. Input: {@DTO}", function, threadId, request);
+
+        try
+        {
+            // Simulate domain logic
+            var result = new WashDto();
+            _logger.LogInformation("✅ {Function} [Thread:{ThreadId}] - COMPLETED. Output: {@Result}", function, threadId, result);
+            return result;
+        }
+        catch (ValidationException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ {Function} [Thread:{ThreadId}] - VALIDATION FAILED. Input: {@DTO}", function, threadId, request);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ {Function} [Thread:{ThreadId}] - ERROR. Input: {@DTO}", function, threadId, request);
+            throw;
+        }
+    }
+}
+```
+
+---
+
+## 🛠 Configuration via Serilog
+
+Set up in `Program.cs`:
+
+```csharp
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithThreadId()
+    .Enrich.WithEnvironmentUserName()
+    .WriteTo.Console()
+    .WriteTo.File("Logs/sumisan-log-.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+```
+
+---
+
+## 📁 Log Output
+
+* File: `Logs/sumisan-log-YYYY-MM-DD.log`
+* Example:
+
+```
+🌀 StartWashCommand.Handler [Thread:12] - STARTED. Input: { MachineId = 1, StartUserId = 5 }
+✅ StartWashCommand.Handler [Thread:12] - COMPLETED. Output: { WashingId = 25080601, Status = "P" }
+❌ FinishWashCommand.Handler [Thread:16] - ERROR. Input: {...}
+System.Exception: Wash not found
+```
+
+---
+
+## 📌 Log Levels
+
+| Level       | Purpose                               |
+| ----------- | ------------------------------------- |
+| Information | Start/end of handler execution        |
+| Warning     | Validation or expected rule violation |
+| Error       | Unhandled runtime failures            |
+
+---
+
+## ✅ Summary
+
+All logging is done **inside Command/Query Handlers**, making logs:
+
+* Feature-specific
+* Easier to trace by handler
+* Consistent with Gestraf modular architecture
+
+Do not log inside controllers or services — Gestraf centralizes all business execution within **Handlers**, keeping controllers thin and logging traceable.

@@ -1,0 +1,144 @@
+Backend Architecture for SUMISAN Wash Management App
+Entity Framework Core Models
+To fulfill the functional specification, we define the following EF Core entity models (with code-first approach for migrations
+learn.microsoft.com
+):
+User – Represents a warehouse user who can start/finish washes. Fields: UserId (int primary key), UserName (string). In practice, we'd also store authentication info (e.g. password hash and a role flag) for login. According to the spec, this app is accessed by a general “Warehouse User” role. Each user can be assigned a role (e.g. WarehouseWorker role).
+Machine – Washing machine identifier. Fields: Id (smallint PK) and Name (string up to 50 chars). There are two machines (Machine 1 and 2), and at most one active wash per machine is allowed at a time (enforcing max two concurrent washes total).
+Washing – Represents a wash process record. Key fields:
+WashingId (long/string) – a unique ID in the format YYMMDDXX (date + two-digit sequence). This can be generated when a new wash is started.
+Machine (int) – Machine number (1 or 2) used for the wash.
+StartDate/EndDate (DateTime) – Timestamps for when the wash was started and finished.
+StartUserId/EndUserId (int) – References to the User who started and who finished the wash.
+Status (char) – Status of the wash: 'P' for In Progress or 'F' for Finished.
+StartObservation/FinishObservation (string) – Optional notes or observations at start and finish of the wash.
+The Washing entity has relationships to Prot and Photo entities (see below). A washing in progress (Status P) is considered active, and the system should allow at most 2 active washes concurrently (since only two machines exist).
+Prot – Represents a Prot/kit item associated with a wash. (The spec indicates that at least one prot must be scanned or entered for each wash, and multiple prot entries can be added to one wash.) Fields:
+ProtId (string) – Prot/kit identifier (format “PROTXXX”).
+BatchNumber (string) – Batch identifier (format “NLXX”).
+BagNumber (string) – Box identifier in the batch (format “XX/XX”, e.g. 01/02 meaning box 1 of 2).
+WashingId (foreign key) – The wash this prot entry belongs to. This forms a one-to-many relationship: one Washing can have one or more Prot entries (allowing multiple instrument kits to be washed in a single cycle).
+Photo – Represents an evidence photo taken or uploaded for a wash. Fields: Id (int PK), WashingId (FK to Washing), FilePath (string) and CreatedAt (DateTime timestamp). Multiple photos can be attached to a wash (one-to-many). Per requirements, at least one photo is required to finalize a wash.
+Configuration – A simple table for app settings. For example, an entry for ImagePath (string) stores the base directory/path where images are saved. The image path can be configured (e.g. via appsettings or DB) and includes subfolders per year for organization.
+Data Transfer Objects (DTOs)
+We use DTO classes to shape the data for requests/responses, isolating our internal models from external representation and ensuring only necessary data is exposed
+medium.com
+medium.com
+. Key DTOs include:
+LoginRequestDTO – includes UserName and Password. This is used by the login API to authenticate a user.
+LoginResponseDTO – includes authentication result data, e.g. a JWT token or user info and roles if login is successful.
+NewWashDTO – used when starting a new wash. Contains necessary info to initiate a wash:
+MachineId (int) – which machine to use.
+StartUserId (int) – the user starting the wash.
+ProtEntries – a list of prot items (each with ProtId, BatchNumber, BagNumber) to be included in this wash.
+StartObservation (string, optional) – any starting observations.
+The client must provide at least one Prot entry in this DTO (the “Iniciar Lavado” button is only enabled after adding at least one prot in the UI).
+FinishWashDTO – used to complete a wash. Contains:
+FinishUserId (int) – the user finishing the wash.
+FinishObservation (string, optional) – any ending observations.
+Optionally, it could include a list of PhotoIds or filenames that have been uploaded for this wash (if the photos are uploaded beforehand). However, in our design the photo upload is a separate step, so the Finish DTO mainly carries the final observations.
+AddProtDTO – used by the “add prot to wash” endpoint. Contains WashingId and a Prot identifier (or full Prot details like ProtId, BatchNumber, BagNumber). This DTO allows adding another Prot item to an active wash.
+PhotoUploadDTO – (if needed) to handle image upload metadata, e.g. it might include an image file (stream) and possibly some info like image index or description. In practice, image uploading will be done via multipart form-data, so a dedicated DTO class may not be necessary; instead, we handle the file directly in the controller.
+We use AutoMapper to map between entity models and DTOs for cleaner code. AutoMapper automates the object-to-object mapping, reducing manual coding and errors
+medium.com
+. For example, the service layer can map a Washing entity to a DTO to return to the client, or map a NewWashDTO into a Washing entity for creation.
+Layered Architecture: Controllers, Services, and Repositories
+The backend follows a modular layered architecture for clear separation of concerns
+c-sharpcorner.com
+. The layers are organized as:
+Controllers (Presentation Layer) – Define the API endpoints and handle HTTP requests/responses. Controllers should contain minimal business logic, delegating work to the service layer. Each controller corresponds to a feature area (e.g. an AuthController for authentication, and a WashController for wash-related operations). Controllers are decorated with routing (e.g. [Route("lavados")]) and use attributes like [ApiController] and [Authorize] (for securing endpoints). The controller actions validate input (via model validation/FluentValidation) and then call the appropriate service methods. They return results (DTOs or status codes) to the client. By keeping controllers thin, we ensure they focus only on HTTP and model binding concerns
+medium.com
+.
+Services (Business Logic Layer) – Implement the core business logic and use cases. Services are C# classes (e.g. WashService, AuthService) that contain methods corresponding to operations like StartWash, FinishWash, etc. A service method will perform validations (business rule enforcement), interact with repositories, and coordinate multiple steps. For example, WashService.StartNewWash(NewWashDTO) will:
+Check business rules (e.g. ensure less than 2 active washes, ensure the selected machine is free, ensure at least one Prot was provided).
+Create a new Washing entity (assigning WashingId, timestamps, etc.) and related Prot entities.
+Save them via the repository, and perhaps initiate any other processes needed.
+Return a result (e.g. the created wash’s ID or details) as a DTO.
+Services use AutoMapper to convert between entities and DTOs as needed, returning mapped DTOs instead of raw entities for security and clarity
+medium.com
+. By isolating business logic here, controllers remain simple, and the rules can be unit-tested independently.
+Repositories (Data Access Layer) – Handle all interaction with the database using EF Core. Each aggregate or entity type can have a repository (e.g. IWashRepository, IProtRepository, IUserRepository) which provides methods for CRUD operations. For instance, WashRepository might have methods like AddWash(Washing wash), GetActiveWashes(), FindWashById(id), etc. The repository uses the EF DbContext to query or save data. We also implement repository interfaces to allow mocking in tests and to enforce an abstraction between the services and EF Core details
+medium.com
+. The repository pattern provides a clean interface to data access, encapsulating EF queries so that the rest of the app does not directly depend on the database implementation
+medium.com
+.
+All three layers are connected via Dependency Injection (DI), which is built into ASP.NET Core. We define interfaces for services and repositories (e.g. IWashService, IWashRepository, etc.), and in the Startup (or Program in .NET 6) we register these for DI (e.g. services.AddScoped<IWashService, WashService>(); and so on). Controllers then declare constructor parameters of the interface types, and ASP.NET Core injects the concrete implementations at runtime. This decoupling improves maintainability and testability (we can swap implementations or use fakes for testing). Each layer strictly interacts only with the adjacent layer: Controllers call Services, Services call Repositories, and Repositories call the database, following the layered architecture principle
+exceptionnotfound.net
+.
+Authentication & Authorization
+We implement user authentication via an AuthController and related service:
+AuthController – exposes POST /auth/login. The controller takes a LoginRequestDTO with username and password, then calls AuthService.Authenticate(username, password). If credentials are valid, the AuthService returns a JWT token (or session token) wrapped in a LoginResponseDTO. The controller returns this to the client. If invalid, it returns 401 Unauthorized.
+AuthService – validates the user credentials. This could use ASP.NET Core Identity or a custom check against the Users table. Given the spec’s simplicity, a straightforward approach is to store a hashed password for each user in the Users table (along with their role), and verify it here. On success, the service will generate a JWT containing the user’s ID/name and role (e.g. a claim indicating the “WarehouseUser” role).
+Passwords are never stored in plaintext. We would hash and salt passwords and possibly use an Identity library for robust security.
+All subsequent endpoints are protected with JWT authorization. We configure JWT bearer authentication in the API, and decorate controllers or actions with [Authorize]. Role-based access control is enforced by specifying roles in the attribute (e.g. [Authorize(Roles="WarehouseUser")] on the wash management endpoints). Since only warehouse staff use this app, we might have a single role (e.g. WarehouseUser) for all authenticated users, but the setup supports extending roles if needed (for example, an admin role that could view reports, etc., could be added later).
+Wash Management Use Cases
+All wash-related functionality is handled in a WashController (routes under /lavados as per spec’s terminology) backed by a WashService (and related repositories). Below are the main use cases and how they are designed:
+Start New Wash (POST /lavados): This endpoint starts a new wash cycle. The client sends a NewWashDTO. The WashController action (e.g. StartWash) first validates the DTO (ensuring required fields are present, etc.). We use FluentValidation to validate inputs declaratively (FluentValidation separates validation logic into validator classes, keeping controllers/services clean
+medium.com
+). For example, the NewWash validator will confirm that at least one Prot entry is provided and that MachineId and StartUserId are present. The controller then calls WashService.StartNewWash(dto). The WashService method implements:
+Business rule checks: It queries how many washes are currently active (Status = 'P'). If there are already two active washes, it rejects the request (throws an exception or returns a result indicating the limit is reached). The spec explicitly limits concurrent washes to 2, so this rule is enforced here. The service can use WashRepository.CountActiveWashes() or similar for this check.
+It also checks that the selected machine is not already in use. (If one machine is active, only the other machine can be chosen – the UI already ensures this, but the server should enforce it too by verifying no active wash exists with the same machine ID.)
+It validates that the DTO contains at least one Prot entry (business rule: a wash must have at least one Prot/kit scanned or entered).
+If validation passes, the service creates a new Washing entity:
+Generates a new WashingId in YYMMDDXX format (for example, using the current date and a sequence number for that day). The sequence (XX) can be obtained by counting how many washes have been started so far today and adding 1, or by a DB sequence/reset each day. For instance, the first wash on 2025-08-06 would get ID 25080601.
+Sets Machine, StartDate=DateTime.Now, StartUserId (from the DTO), Status='P', and saves any StartObservation.
+Creates Prot entity instances for each Prot in dto.ProtEntries, linking them to this wash (setting each Prot’s WashingId to the new wash’s ID). The Prot fields (ProtId, BatchNumber, BagNumber) are saved as provided. At least one prot is expected, per rule.
+The service calls WashRepository.Add(washing) which adds the wash and related prot entries to the DbContext and saves changes (transactionally). After saving, the new wash’s data (maybe including its generated WashingId) is returned. We map the entity to a DTO (e.g. WashDetailsDTO) using AutoMapper and return that to the controller, which then returns it as JSON with 201 Created. A successful response indicates the wash has “started” (the UI then shows a confirmation screen). Note: Only if all business rules pass and the DB save is successful do we consider the wash started. If any rule fails, the service throws a validation exception (which returns 400 Bad Request or a custom error to the client). For example, trying to start a third concurrent wash would result in an error.
+Add Prot to Wash (POST /lavados/{id}/prots): This endpoint allows adding an additional Prot record to an active wash. In many cases, the initial prot(s) are already included when starting the wash. However, the spec suggests the user “can take more than one reading or enter more than one record” in the new wash process. This could be handled on the client side (collecting multiple entries then calling start once), or via multiple API calls. If implemented as a separate call, the client would call this to add each prot one by one. The WashController (or a dedicated ProtController) will accept a request containing either the wash ID as a URL parameter and the Prot info in the body. The controller ensures the wash is still in progress (you shouldn’t add prot to a finished wash) and then calls WashService.AddProt(washId, protDto). The WashService.AddProt method will:
+Verify that the wash with the given ID exists and is in Status 'P' (active).
+Create a new Prot entity from the DTO (or use a ProtRepository to add it).
+Associate it with the wash and save via ProtRepository.Add(prot). This will insert the new prot record linked to the wash.
+This could return the updated list of prot entries or just success. (Adding prot entries is typically part of the start-wash flow; our architecture supports it for flexibility.) Business rule: at least one prot is required in a wash, which is already satisfied if we got this far. There's no explicit upper limit on number of prot entries per wash mentioned, so the user can add multiple until finished.
+Finish Wash (PUT /lavados/{id}/finish): This endpoint finalizes an active wash. The WashController action (e.g. FinishWash) is protected (requires auth) and expects a FinishWashDTO with any final observations (and implicitly the current user ending the wash). The controller uses FluentValidation to ensure any required fields are present. It then calls WashService.FinishWash(id, finishDto). The WashService.FinishWash method will:
+Retrieve the wash by id (via repository) and ensure it exists and is currently in progress.
+Enforce business rules for finishing:
+At least one Prot: The wash should already have at least one Prot entry (enforced at start; but the service can double-check via ProtRepository.GetByWashId(id) count).
+At least one Photo: There must be at least one photo evidence attached before finishing. This is explicitly required: “You must add at least one photo” to complete the wash. The service can check PhotoRepository.GetByWashId(id) to ensure at least one photo exists. If not, it returns an error (the UI should prevent hitting finalize until a photo is present, but server-side check adds safety).
+Optionally, ensure the FinishUserId (the user finishing) is provided – typically it would be the current logged-in user ID.
+If validations pass, update the wash entity: set EndDate=DateTime.Now, EndUserId (from current user or DTO), Status='F', and save any FinishObservation text provided.
+Use WashRepository.Update(wash) to save changes (or just save via context).
+After saving, the service might return the updated wash info (or a simple success message). The controller then returns an HTTP 200 OK. The application can then display a “Wash Completed” summary (machine, operator, photos, observations) as described in the spec.
+Upload Images (POST /lavados/{id}/photos): This endpoint handles uploading one or multiple photos for a given wash. We expect the client to call this (possibly during the finish process) to attach photo files. The WashController action (e.g. UploadPhoto) would accept multipart form-data (files) along with the wash ID. It ensures the wash exists and is in progress (if already finished, perhaps disallow new photos). The action might call WashService.SavePhoto(washId, file) for each uploaded file. The WashService.SavePhoto method will:
+Determine the storage path for the image. The base path comes from configuration (the ImagePath setting). Within that, the service ensures a subfolder for the current year exists (e.g. <BasePath>/2025/). This organizes photos by year.
+Generate a file name using the wash ID and an index. For example, if wash ID is 25080601 and this is the first photo, file name could be 25080601_01.jpg, next 25080601_02.jpg, etc. The service can find the next available index by counting existing photos for that wash.
+Save the file to the disk (or network path) in the appropriate folder.
+Create a Photo entity with WashingId, FilePath (store the relative or full path of the saved file), and CreatedAt timestamp. Use PhotoRepository.Add(photo) to save record in DB.
+This endpoint returns a 201 Created or 200 OK with details of the saved photo(s) (or just success). The photo records are now linked to the wash. These photos will later be retrieved (e.g. via GET /lavados/{id} or included in active wash details) if needed. They serve as proof of wash completion, as required by the spec.
+Get Current Washes (GET /lavados/active): This endpoint returns the list of active (in-progress) washes. The WashController action (e.g. GetActiveWashes) will call WashService.GetActiveWashes(). The WashService uses WashRepository.Query() or a dedicated method to fetch all washes where Status == 'P'. It might also eagerly load related data (like which machine, which user started it) to return a comprehensive view. The result is mapped to a list of DTOs (each containing wash ID, machine, start time, operator name, etc.). This allows the front-end to display the active washes and offer the option to finish them. (The UI shows up to two active washes with “Finish” buttons for each.) We also likely provide a general GET /lavados/{id} to retrieve details of a specific wash, including its prot list and photos, when needed (for example, to show the summary after finishing or if resuming an active wash). This would also be implemented in the controller & service, using repositories to load the wash and related data.
+Throughout these operations, FluentValidation is used to ensure inputs meet basic criteria (e.g. non-empty fields, valid formats). FluentValidation gives a flexible way to enforce rules without cluttering controllers
+medium.com
+. For example:
+A LoginRequestValidator ensures username/password are not empty.
+A NewWashValidator ensures MachineId and StartUserId are specified and Prot list count ≥ 1.
+A FinishWashValidator could ensure that FinishObservation length is within limits, etc., but the critical rules (photo existence) are checked in business logic since they depend on database state.
+We register these validators in the DI container so that ASP.NET will automatically invoke them during model binding. If validation fails, the API returns a 400 with details.
+Additional Implementation Details
+AutoMapper Integration: We configure AutoMapper profiles to map our EF entities to DTOs and vice versa. For example, a WashingProfile might define mapping from Washing to a WashDto (for listing or detail views), including nested mapping for related Prot and Photo lists. AutoMapper saves time and reduces errors by automatically copying matching properties
+medium.com
+. This keeps our controller responses clean – we return DTOs that contain only the necessary data, not the entire EF entities.
+EF Core DbContext: We create a DbContext (e.g. AppDbContext) with DbSet<User>, DbSet<Machine>, DbSet<Washing>, DbSet<Prot>, DbSet<Photo>, etc. Relationships are configured via Fluent API or conventions (e.g. Washing has Prots navigation, Prot has Washing navigation, etc.). We use code-first migrations to evolve the database schema from our models
+learn.microsoft.com
+. On initial deployment, a migration creates tables for Users, Machines, Washings, Prots, Photos, Configurations. Subsequent model changes can be propagated via migrations, ensuring the DB stays in sync with the code.
+Dependency Injection Configuration: In the startup configuration, we register:
+The DbContext (services.AddDbContext<AppDbContext>(options => ...) pointing to the database).
+Repositories: e.g. services.AddScoped<IWashRepository, WashRepository>() (and similarly for other repos). Often a generic repository or unit-of-work could be used to streamline this, but here we can have specific repositories per aggregate.
+Services: e.g. services.AddScoped<IWashService, WashService>(), etc.
+AutoMapper: services.AddAutoMapper(typeof(Startup)) and define mapping profiles.
+FluentValidation: services.AddValidatorsFromAssemblyContaining<NewWashValidator>() and enable automatic validation (services.AddFluentValidationAutoValidation()) so that DTOs are validated before the controller logic runs
+medium.com
+medium.com
+.
+Authentication: configure JWT bearer options and services.AddAuthorization() with policies/roles as needed.
+This layered and modular setup makes the application easier to maintain and test. Each layer can be tested in isolation (e.g. write unit tests for WashService with a fake repository to ensure business rules work). The separation of concerns ensures that the controller only handles web concerns, the service handles business decisions, and the repository deals with data persistence
+medium.com
+medium.com
+. By following these design principles, the SUMISAN wash management backend will be robust, scalable, and in line with modern .NET practices. Sources:
+SUMISAN Wash Management App – Functional Spec (ECNA) (business rules and requirements)
+.NET Architecture & Best Practices – Layered pattern with Services/Repositories
+medium.com
+medium.com
+, AutoMapper usage
+medium.com
+, and FluentValidation for input rules
+medium.com
+.

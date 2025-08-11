@@ -1,0 +1,230 @@
+# SUMISAN Client Functional Specification
+
+## 1. INTRODUCTION
+
+This document summarizes the functional and UI/UX requirements for the SUMISAN web application. The system is designed for warehouse staff to manage the cleaning (lavado) cycles of surgical instrument kits (PROTs) that are used in clinical interventions. The solution aims to be mobile-friendly, responsive, efficient, and compliant with strict traceability and validation constraints.
+
+---
+
+## 2. PROPOSED SOLUTION OVERVIEW
+
+The application must support authenticated warehouse users in:
+
+* Starting new wash cycles
+* Finalizing ongoing wash cycles
+* Capturing and storing photos as traceable documentation
+* Scanning instrument data via QR or manual input
+
+Key constraints include:
+
+* Max **2 active washes** at any given time
+* Each wash must be linked to an operator and a machine (1 or 2)
+* Each wash must have at least **one PROT** to start
+* Each wash must have at least **one photo** to finish
+
+Navigation is driven through a bottom tab bar with: `Inicio`, `Nuevo`, `Finalizar`, `Perfil`.
+
+---
+
+## 2.1 LOGIN
+
+### Purpose
+
+Provides secure access to the application.
+
+### UI Layout:
+
+* SUMISAN logo and branding
+* Username (`Usuario`) + Password (`Contraseña`) fields
+* `ENTRAR` button
+* `¿Has olvidado tu contraseña?` link (non-functional placeholder for now)
+
+### Behavior:
+
+* If credentials are valid, navigate to dashboard
+* Invalid credentials display an error toast
+* JWT token is saved in `localStorage`
+
+---
+
+## 2.2 START NEW WASH (Nuevo Lavado)
+
+### Accessed via
+
+* `NUEVO` tab
+* or `NUEVO LAVADO` button on `Inicio`
+
+### Flow:
+
+1. Select `Operario/a` from dropdown (auto-filled if logged-in user)
+2. Select `Máquina lavado` (filtered by availability)
+3. Use `ESCANEAR QR` or manual input (`Introducción manual`) to add PROTs
+4. Optionally write in `Observaciones`
+5. Button `INICIAR LAVADO` becomes active after at least 1 PROT is added
+6. Submitting shows a confirmation screen (`LAVADO INICIADO`)
+
+### QR Scanner Modal
+
+* Uses mobile camera
+* Includes flash, zoom, gallery, and close controls
+* Can scan multiple items in a session
+
+### Manual Entry:
+
+* Focus auto-set on input field
+* Gun scanner or keyboard entry accepted
+* Each input is validated and added to PROT list
+* Entries are removable with delete icon (❌)
+
+### Backend Interactions:
+
+* `POST /api/washing` (NewWashDTO)
+* `POST /api/washing/{id}/prots` (AddProtDTO\[])
+
+---
+
+## 2.3 FINISH WASH (Finalizar Lavado)
+
+### Accessed via
+
+* `FINALIZAR` tab
+* or `FINALIZAR LAVADO MÁQUINA X` button on dashboard
+
+### Flow:
+
+1. System loads in-progress washes (max 2)
+2. Operator selects `Operario/a` from dropdown (defaults to current user)
+3. Upload photos via:
+
+   * `SACAR FOTO` (camera)
+   * `ADJUNTAR FOTO/S` (gallery)
+4. Optionally write in `Observaciones`
+5. `FINALIZAR LAVADO` button activates when at least one photo is attached
+6. Submit leads to summary screen (`LAVADO FINALIZADO`)
+
+### Photo Handling:
+
+* Max 99 photos per wash
+* JPEG and PNG only
+* Filenames must follow: `{WashingId}_{XX}.jpg`
+* Images are grouped by year under the configured `ImagePath`
+* User can delete photos before submission
+
+### Backend Interactions:
+
+* `POST /api/washing/{id}/photos` (multipart/form-data)
+* `PUT /api/washing/{id}/finish` (FinishWashDTO)
+
+---
+
+## 2.4 DASHBOARD (GESTIÓN DE LAVADOS)
+
+### Components:
+
+* Header: `GESTIÓN DE LAVADOS`
+* Primary Button: `NUEVO LAVADO`
+* Secondary Buttons: `FINALIZAR LAVADO MÁQUINA 1` and/or `MÁQUINA 2`
+* Navigation: `Inicio`, `Nuevo`, `Finalizar`, `Perfil`
+
+### Behavior:
+
+* Buttons for machines show active/inactive state
+* If 2 washes are active, `NUEVO LAVADO` is disabled
+* Returning from confirmation screens lands here
+
+---
+
+## 2.5 CONFIRMATION SCREENS
+
+### Start Confirmation:
+
+* Header: `LAVADO INICIADO`
+* Displays: Operator, Machine, PROTs, Observation
+* Action: `VOLVER AL INICIO`
+
+### Finish Confirmation:
+
+* Header: `LAVADO FINALIZADO`
+* Displays: Operator, Machine, Photos, Observation
+* Action: `VOLVER AL INICIO`
+
+---
+
+## 3. DATABASE SCHEMA OVERVIEW
+
+### USERS
+
+| Column       | Type         | Notes              |
+| ------------ | ------------ | ------------------ |
+| UserId       | int (PK)     |                    |
+| UserName     | varchar(100) | Required           |
+| PasswordHash | string       | Optional for login |
+| Role         | varchar(50)  | "WarehouseUser"    |
+
+### MACHINES
+
+| Column | Type          | Notes      |
+| ------ | ------------- | ---------- |
+| Id     | smallint (PK) | Max 2 rows |
+| Name   | varchar(50)   |            |
+
+### WASHINGS
+
+| Column            | Type          | Notes               |
+| ----------------- | ------------- | ------------------- |
+| WashingId         | bigint (PK)   | Format YYMMDDXX     |
+| MachineId         | FK            | FK → Machines.Id    |
+| StartUserId       | FK            | FK → Users.UserId   |
+| EndUserId         | FK (nullable) | FK → Users.UserId   |
+| StartDate/EndDate | datetime      | Required / Optional |
+| Status            | char(1)       | 'P' or 'F'          |
+| StartObservation  | varchar(100)  | Optional            |
+| FinishObservation | varchar(100)  | Optional            |
+
+### PROTS
+
+| Column      | Type       | Format        |
+| ----------- | ---------- | ------------- |
+| ProtId      | varchar(7) | PROTXXX       |
+| BatchNumber | varchar(4) | NLXX          |
+| BagNumber   | varchar(5) | XX/XX         |
+| WashingId   | FK         | FK → Washings |
+
+### PHOTOS
+
+| Column    | Type         | Notes                                  |
+| --------- | ------------ | -------------------------------------- |
+| Id        | int (PK)     |                                        |
+| WashingId | FK           | FK → Washings                          |
+| FileName  | varchar(255) | Format: {WashingId}\_{XX}.jpg          |
+| FilePath  | varchar(255) | Grouped under {ImagePath}/{Year}/ path |
+
+### PARAMETERS
+
+| Column | Type         | Purpose               |
+| ------ | ------------ | --------------------- |
+| Name   | varchar(50)  | e.g. 'ImagePath'      |
+| Value  | varchar(255) | e.g. '/shared/photos' |
+
+---
+
+## 4. FRONTEND VALIDATION RULES
+
+| Field/Rule         | Constraint/Behavior          |
+| ------------------ | ---------------------------- |
+| PROTs              | ≥1 required to start wash    |
+| Photos             | ≥1 required to finish wash   |
+| MachineId          | Required, 1 or 2             |
+| UserId (Start/End) | Required                     |
+| File Type          | JPEG or PNG only             |
+| File Count         | Max 99 photos per wash       |
+| BagNumber          | Format XX/XX                 |
+| BatchNumber        | Format NLXX                  |
+| ProtId             | Format PROTXXX               |
+| Observations       | Optional, max 100 characters |
+
+---
+
+## 5. SUMMARY
+
+This specification represents the client's functional vision for the SUMISAN web-based wash management system. It describes the user flows, frontend validations, camera/photo integration, and expected backend interactions to be honored throughout the application lifecycle. Implementation must follow Gestraf’s CQRS design on the backend and Angular 16+ patterns on the frontend.

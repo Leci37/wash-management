@@ -1,0 +1,113 @@
+# ✅ Gestraf-Aligned Error Codes – SUMISAN Wash Management
+
+This document maps each API endpoint and error code to its corresponding **CQRS command or query handler**.
+
+All business rule validations and exceptions are handled within **Handlers** (not controllers), and return consistent HTTP codes using middleware or controller-level result mapping.
+
+---
+
+## 🔐 Authentication
+
+### `POST /api/auth/login`
+
+* **Handler:** `AuthenticateUserCommand`
+* **Errors:**
+
+  * `400 Bad Request` → Missing fields (validated by `LoginRequestValidator`)
+  * `401 Unauthorized` → Invalid credentials (thrown in Handler)
+
+---
+
+## 🚿 Start Wash
+
+### `POST /api/washing`
+
+* **Handler:** `StartWashCommand`
+* **Errors:**
+
+  * `400 Bad Request` → Missing `MachineId`, `StartUserId`, or empty `ProtEntries[]`
+  * `409 Conflict` →
+
+    * Max 2 active washes (enforced via `IWashingRepository.CountActiveAsync()`)
+    * Selected machine already in use (via `IWashingRepository.IsMachineInUseAsync()`)
+
+---
+
+## 🧺 Finish Wash
+
+### `PUT /api/washing/{id}/finish`
+
+* **Handler:** `FinishWashCommand`
+* **Errors:**
+
+  * `400 Bad Request` → DTO validation failure (missing `EndUserId`)
+  * `403 Forbidden` → No photos uploaded for this wash (checked via `IPhotoRepository.GetByWashId()`)
+  * `404 Not Found` → Wash does not exist (null from `IWashingRepository.GetByIdAsync()`)
+  * `409 Conflict` → Wash is already finished (Status = 'F')
+
+---
+
+## 📦 Add Prot
+
+### `POST /api/washing/{id}/prots`
+
+* **Handler:** `AddProtCommand`
+* **Errors:**
+
+  * `400 Bad Request` → Invalid prot format (validator-level)
+  * `404 Not Found` → Wash not found (repository returns null)
+  * `409 Conflict` → Wash is already finished (Status = 'F')
+
+---
+
+## 🖼 Upload Photo
+
+### `POST /api/washing/{id}/photos`
+
+* **Handler:** `UploadPhotoCommand`
+* **Errors:**
+
+  * `400 Bad Request` → No file provided or unsupported format (handler or `PhotoUploadValidator`)
+  * `404 Not Found` → Wash not found
+  * `409 Conflict` → Already reached 99 photos (business rule)
+  * `413 Payload Too Large` → File exceeds size limit (enforced via request limit config)
+
+---
+
+## 🔍 Get Active Washes
+
+### `GET /api/washing/active`
+
+* **Handler:** `GetActiveWashesQuery`
+* **Errors:**
+
+  * `200 OK` → Always returns 0–2 items (no failure cases)
+
+---
+
+## 🔍 Get Wash By ID
+
+### `GET /api/washing/{id}`
+
+* **Handler:** `GetWashByIdQuery`
+* **Errors:**
+
+  * `404 Not Found` → ID does not match any existing wash
+
+---
+
+## 🔐 Global Auth Errors
+
+* `401 Unauthorized` → Missing or invalid JWT (middleware)
+* `403 Forbidden` → Authenticated but lacking required role (e.g., not `WarehouseUser`)
+* `500 Internal Server Error` → Unexpected exception (handled via middleware + Serilog)
+
+---
+
+## ✅ Handler-Based Error Principles (Gestraf)
+
+* **Validation errors** (e.g., missing fields) are enforced via FluentValidation
+* **Business rules** (e.g., max washes, photo count) are checked inside handlers
+* **NotFound/Conflict/Forbidden** errors are thrown by handlers, mapped via exception middleware or result helpers
+
+This keeps all error behavior declarative, testable, and in line with Gestraf’s CQRS and MediatR-based design.

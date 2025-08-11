@@ -1,0 +1,151 @@
+# 🧠 Gestraf-Aligned API Endpoint Spec for SUMISAN
+
+This document defines the **CQRS-driven API endpoints** for the SUMISAN Wash Management backend, structured according to the **Gestraf architecture**.
+
+---
+
+## 🧱 WashingController (controlmat.Api)
+
+```csharp
+[ApiController]
+[Route("api/washing")]
+public class WashingController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public WashingController(IMediator mediator) => _mediator = mediator;
+
+    [HttpPost]
+    public async Task<IActionResult> Start([FromBody] NewWashDTO dto)
+        => Ok(await _mediator.Send(new StartWashCommand.Request(dto)));
+
+    [HttpPut("{id}/finish")]
+    public async Task<IActionResult> Finish(long id, [FromBody] FinishWashDTO dto)
+        => Ok(await _mediator.Send(new FinishWashCommand.Request(id, dto)));
+
+    [HttpPost("{id}/photos")]
+    public async Task<IActionResult> UploadPhoto(long id, [FromForm] IFormFile file)
+        => Ok(await _mediator.Send(new UploadPhotoCommand.Request(id, file)));
+
+    [HttpPost("{id}/prots")]
+    public async Task<IActionResult> AddProt(long id, [FromBody] AddProtDTO dto)
+        => Ok(await _mediator.Send(new AddProtCommand.Request(id, dto)));
+
+    [HttpGet("active")]
+    public async Task<IActionResult> GetActive()
+        => Ok(await _mediator.Send(new GetActiveWashesQuery.Request()));
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(long id)
+        => Ok(await _mediator.Send(new GetWashByIdQuery.Request(id)));
+}
+```
+
+---
+
+## 🧠 Application Layer – Commands/Queries
+
+### StartWashCommand
+
+```csharp
+public static class StartWashCommand
+{
+    public class Request : IRequest<WashDto> { public NewWashDTO Dto { get; set; } }
+    public class Handler : IRequestHandler<Request, WashDto> { /* validate, map, persist */ }
+}
+```
+
+### FinishWashCommand
+
+```csharp
+public static class FinishWashCommand
+{
+    public class Request : IRequest<Unit> { public long WashId; public FinishWashDTO Dto; }
+    public class Handler : IRequestHandler<Request, Unit> { /* validate photos, update */ }
+}
+```
+
+### UploadPhotoCommand
+
+```csharp
+public static class UploadPhotoCommand
+{
+    public class Request : IRequest<string> { public long WashId; public IFormFile File; }
+    public class Handler : IRequestHandler<Request, string> { /* naming, storage, DB */ }
+}
+```
+
+### AddProtCommand
+
+```csharp
+public static class AddProtCommand
+{
+    public class Request : IRequest<Unit> { public long WashId; public AddProtDTO Dto; }
+    public class Handler : IRequestHandler<Request, Unit> { /* validate + save prot */ }
+}
+```
+
+### GetActiveWashesQuery
+
+```csharp
+public static class GetActiveWashesQuery
+{
+    public class Request : IRequest<List<WashDto>> {}
+    public class Handler : IRequestHandler<Request, List<WashDto>> { /* read-only */ }
+}
+```
+
+### GetWashByIdQuery
+
+```csharp
+public static class GetWashByIdQuery
+{
+    public class Request : IRequest<WashDto> { public long Id; }
+    public class Handler : IRequestHandler<Request, WashDto> { /* load washing + prots + photos */ }
+}
+```
+
+---
+
+## 🗂 DTOs (Application.Common.Dto)
+
+* `NewWashDTO`
+* `FinishWashDTO`
+* `AddProtDTO`
+* `WashDto` (includes nested `ProtDto[]`, `PhotoDto[]`)
+
+---
+
+## 🔍 FluentValidation Validators (Application.Common.Validators)
+
+* `NewWashValidator`
+* `FinishWashValidator`
+* `AddProtValidator`
+
+---
+
+## 🔁 Response and Status Codes (by Handler)
+
+| Endpoint                        | Handler Class          | Status Codes       |
+| ------------------------------- | ---------------------- | ------------------ |
+| POST `/api/washing`             | `StartWashCommand`     | 201, 400, 409      |
+| PUT `/api/washing/{id}/finish`  | `FinishWashCommand`    | 200, 403, 409      |
+| POST `/api/washing/{id}/prots`  | `AddProtCommand`       | 201, 400, 404, 409 |
+| POST `/api/washing/{id}/photos` | `UploadPhotoCommand`   | 201, 400, 409, 413 |
+| GET `/api/washing/active`       | `GetActiveWashesQuery` | 200                |
+| GET `/api/washing/{id}`         | `GetWashByIdQuery`     | 200, 404           |
+
+---
+
+## ✅ CQRS Organization Summary
+
+| Feature      | Command or Query Class | Notes                         |
+| ------------ | ---------------------- | ----------------------------- |
+| Start Wash   | `StartWashCommand`     | Validates max washes, machine |
+| Finish Wash  | `FinishWashCommand`    | Requires photo check          |
+| Add Prot     | `AddProtCommand`       | Wash must be active           |
+| Upload Photo | `UploadPhotoCommand`   | Validates naming/limit        |
+| Get Active   | `GetActiveWashesQuery` | Query only                    |
+| Get by ID    | `GetWashByIdQuery`     | Nested DTOs returned          |
+
+This spec ensures full CQRS separation, handler-based enforcement of business logic, and DTO-driven validation — compliant with the **Gestraf architecture**.

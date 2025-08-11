@@ -1,0 +1,74 @@
+// 📁 controlmat.Api
+// 🔧 Gestraf-Aligned Deployment Configuration for SUMISAN
+// This version aligns with Gestraf's separation of concerns for service registration and startup logic.
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using System.Text;
+using controlmat.Application;
+using controlmat.Infrastructure;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// ✅ Serilog Logging Setup
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithThreadId()
+    .Enrich.WithEnvironmentUserName()
+    .WriteTo.Console()
+    .WriteTo.File("Logs/sumisan-log-.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+// ✅ Add Configuration-Based Services
+var config = builder.Configuration;
+
+// ✅ EF Core DbContext (via Infrastructure)
+builder.Services.AddInfrastructureServices(config);
+
+// ✅ Register Application Layer (MediatR, AutoMapper, Validators)
+builder.Services.AddApplicationServices();
+
+// ✅ Authentication / JWT
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = config["Jwt:Issuer"],
+            ValidAudience = config["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// ✅ Swagger via NSwag or Swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// ✅ Add MVC Controllers
+builder.Services.AddControllers();
+
+var app = builder.Build();
+
+// ✅ Swagger UI in Development
+env: if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+
+app.Run();
