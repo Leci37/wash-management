@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\controlmat.Application\controlmat.Application.csproj" />
+    <ProjectReference Include="..\controlmat.Infrastructure\controlmat.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
