@@ -1,0 +1,72 @@
+// Media Breakpoints
+$breakpoints: (
+  "xsmall": 0px,        // Phones (default)
+  "small": 600px,       // Small tablets / large phones
+  "medium": 768px,      // Tablets
+  "large": 1024px,      // Small desktops
+  "xlarge": 1280px      // Large desktops
+) !default;
+
+// Grid Columns
+$container-columns: (
+  "xsmall": 1,
+  "small": 2,
+  "medium": 3,
+  "large": 4,
+  "xlarge": 4
+) !default;
+
+// Font Sizes
+$font-size-base: 16px !default;
+$font-size-sm: 14px !default;
+$font-size-lg: 18px !default;
+
+// Font Weights
+$font-weight-regular: 400 !default;
+$font-weight-medium: 500 !default;
+$font-weight-bold: 700 !default;
+
+// Fonts
+$primary-font: "Montserrat" !default;
+$primary-font-bold: "Montserrat-Bold" !default;
+$secondary-font: 'Haverlock', Arial, Roboto, "Segoe UI", "Helvetica Neue", sans-serif !default;
+$secondary-font-bold: 'Haverlock-Bold', Arial, Roboto, "Segoe UI", "Helvetica Neue", sans-serif !default;
+
+$primary-text: #212121 !default;  // Dark gray for primary text
+$secondary-text: #666666 !default;  // Medium gray for secondary text
+
+// Colors
+
+$white: #ffffff;
+$black: #000000;
+
+$primary-yellow: #c2bd18; // $primary-color: #c2bd18; //
+$highlight-yellow: #f3e300;
+
+$text-dark: #333333;
+$text-secondary: #666666;
+
+$gray-light: #f2f0f1; // $light-grey: #f2f0f1; // $dark-grey: #3f3f3f;
+$gray-medium: #a1a1a1;
+$gray-divider: #e6e6e6;
+$gray-dark: #3f3f3f;
+
+
+//Others (old variables)
+/* $blue: #096fef;
+$dark-blue: #005274;
+$light-blue: #dbf5fb;
+$cyan: #99befb;
+$cyan2: #ABEEFF;
+$white: #ffffff;
+$red: #ff5757;
+$grey: #d0d7dd;
+
+$secondary-color: $light-blue;
+$error-color: $red;
+
+$primary-font: "Montserrat", sans-serif;
+$secondary-font: 'Haverlock', Arial, Roboto, "Segoe UI", "Helvetica Neue", sans-serif;
+
+$container-column-gap: 30px;
+ */

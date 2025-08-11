@@ -1,0 +1,9 @@
+@use '@angular/material' as mat;
+@use '../base' as *;
+
+html {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$yellow-palette,
+  ));
+}

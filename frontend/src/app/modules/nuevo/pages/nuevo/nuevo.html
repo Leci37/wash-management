@@ -1,0 +1,81 @@
+<div class="page">
+  <form [formGroup]="form">
+    @if (showLavadoIniciado) {
+      <div class="section align-center" > <!-- Icono y texto de lavado iniciado -->
+        <mat-icon svgIcon="check_circle"></mat-icon>
+        <p>{{ 'M_NUEVO.LAVADO_INICIADO_CHECK' | translate }}</p>
+      </div>
+    }
+  <div class="section"> <!-- Operario / Máquina -->
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>{{'OPERARIO' | translate}}</mat-label>
+      <mat-select class="selector" formControlName="operario">
+        @for (user of operarios$ | async; track user) {
+        <mat-option [value]="user.userId">{{ user.userName }}</mat-option>
+      }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" >
+      <mat-label>{{'MAQUINA_LAVADO' | translate}}</mat-label>
+      <mat-select formControlName="maquina" class="selector">
+        @for (maq of maquinas$ | async; track maq) {
+        <mat-option [value]="maq.maqId" [disabled]="!maq.disponible">{{ maq.maqName }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+  @if (!showLavadoIniciado) {
+    <div class="section"> <!-- QR / Manual -->
+      <h2 class="section-title">{{'M_NUEVO.INICIO_LAVADO' | translate}}</h2>
+      <button class="btn-with-icon btn-with-icon--secondary" (click)="onScanQR()">
+        <mat-icon svgIcon="qr_scanner-yellow"></mat-icon>
+        <span>{{ 'M_NUEVO.ESCANEAR_QR' | translate }}</span>
+      </button>
+      <div class="manual-entry">
+        <mat-form-field class="manual-input" appearance="outline" subscriptSizing="dynamic">
+          <input matInput formControlName="manualInputProt" placeholder="{{ 'M_NUEVO.INTRODUCCION_MANUAL' | translate }}" />
+        </mat-form-field>
+        <button matMiniFab [disabled]="isAddButtonDisabled" class="btn add_btn" (click)="onAddManualCode()">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+    </div>
+  }
+  <div class="section"> <!-- PROTS / Observaciones -->
+    <h2 class="section-title">{{ 'PROTS' | translate }}</h2>
+    @if (prots().length > 0) {
+      <div class="prots-list">
+        @for (prot of prots(); track prot) {
+        <div class="prots-item">
+          <span class="prot-label"> {{ prot }} </span>
+
+          <button class="prot-remove" (click)="onRemoveProt(prot)">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      }
+      </div>
+    } @else {
+      <div class="empty-state">
+        {{ 'M_NUEVO.PROTS_EMPTY' | translate }}
+      </div>
+    }
+    <mat-form-field class="observations" appearance="outline">
+      <textarea formControlName="observaciones" matInput placeholder="{{ 'OBSERVACIONES' | translate }}"></textarea>
+    </mat-form-field>
+  </div>
+  <div class="section"> <!-- Iniciar -->
+    @if (!showLavadoIniciado) {
+      <button (click)="onIniciarLavado()" class="btn-with-icon btn-with-icon--primary">
+        <mat-icon>play_arrow</mat-icon>
+        {{ 'M_NUEVO.INICIAR_LAVADO_BTN' | translate }}
+      </button>
+    } @else {
+        <button (click)="onVolverInicio()" class="btn btn--secondary">
+        {{ 'VOLVER_INICIO' | translate }}
+        </button>
+    }
+  </div>
+</form>
+</div>

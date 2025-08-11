@@ -1,0 +1,23 @@
+<div class="inicio">
+  <!-- <h1 class="title">GESTIÓN DE LAVADOS</h1> -->
+
+  <div class="actions">
+    <button class="btn btn--primary menu-btn" [disabled]="!maquina1() && !maquina2()" (click)="goTo(navigationRoutes.Nuevo)">{{'M_INICIO.NUEVO' | translate}}</button>
+
+    <button class="btn btn--secondary" [disabled]="maquina1()" (click)="goTo(navigationRoutes.Finalizar_1)">
+      <div class="btn-label">{{'FINALIZAR' | translate}}</div>
+      <div class="btn-subtitle">{{'M_INICIO.FIN_MAQ_1' | translate}}</div>
+    </button>
+
+    <button class="btn btn--secondary menu-btn" [disabled]="maquina2()" (click)="goTo(navigationRoutes.Finalizar_2)">
+      <div class="btn-label">{{'FINALIZAR' | translate}}</div>
+      <div class="btn-subtitle">{{'M_INICIO.FIN_MAQ_2' | translate}}</div>
+    </button>
+
+    @if (!buscarHidden) {
+      <button class="btn btn--tertiary menu-btn" (click)="goTo(navigationRoutes.Buscar)">
+        <div class="btn-label">{{'M_INICIO.BUSCAR' | translate}}</div>
+      </button>
+    }
+  </div>
+</div>

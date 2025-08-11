@@ -1,0 +1,42 @@
+<div class="page">
+  <form [formGroup]="form">
+    <div class="section"> <!-- Prots / Operarios / Fecha -->
+      <mat-form-field class="selector" appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'PROTS' | translate }}</mat-label>
+        <mat-select formControlName="prots" >
+          @for (prot of prots$ | async; track prot) {
+          <mat-option [value]="prot">{{ prot }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="selector">
+        <mat-label>{{ 'OPERARIOS' | translate }}</mat-label>
+        <mat-select formControlName="operarios">
+          @for (user of operarios$ | async; track user) {
+          <mat-option [value]="user.userId">{{ user.userName }}</mat-option>
+        }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field id="fecha" appearance="outline" subscriptSizing="dynamic"  class="fecha-selector">
+				<mat-label>{{ 'FECHA' | translate }}</mat-label>
+					<mat-date-range-input [rangePicker]="rangePicker">
+						<input matStartDate formControlName="fechaDesde" placeholder="Desde">
+						<input matEndDate formControlName="fechaHasta" placeholder="Hasta">
+					</mat-date-range-input>
+					<mat-datepicker-toggle matSuffix [for]="rangePicker"></mat-datepicker-toggle>
+					<mat-date-range-picker #rangePicker></mat-date-range-picker>
+					<mat-error>{{ 'M_BUSCAR.ERR_FECHA_INVALIDA' | translate }}</mat-error>
+				</mat-form-field>
+    </div>
+
+    <div class="section"> <!-- Botón Buscar -->
+      <button (click)="onBuscar()" class="btn-with-icon btn-with-icon--primary">
+        <mat-icon>search</mat-icon>
+        {{ 'BUSCAR' | translate }}
+      </button>
+    </div>
+
+  </form>
+</div>

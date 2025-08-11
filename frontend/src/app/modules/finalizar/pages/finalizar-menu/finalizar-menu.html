@@ -1,0 +1,15 @@
+<div class="inicio">
+  <!-- <h1 class="title">GESTIÓN DE LAVADOS</h1> -->
+
+  <div class="actions">
+    <button class="btn btn--secondary menu-btn" [disabled]="maquina1()" (click)="goTo(routes.Finalizar_1)">
+      <div class="btn-label">{{'FINALIZAR' | translate}}</div>
+      <div class="btn-subtitle">{{'M_INICIO.FIN_MAQ_1' | translate}}</div>
+    </button>
+
+    <button class="btn btn--secondary menu-btn" [disabled]="maquina2()" (click)="goTo(routes.Finalizar_2)">
+      <div class="btn-label">{{'FINALIZAR' | translate}}</div>
+      <div class="btn-subtitle">{{'M_INICIO.FIN_MAQ_2' | translate}}</div>
+    </button>
+  </div>
+</div>

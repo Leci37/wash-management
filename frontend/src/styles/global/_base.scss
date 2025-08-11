@@ -1,0 +1,25 @@
+@use 'base/index' as base;
+@use '@angular/material' as mat;
+
+
+html {
+  height: 100%;
+  font-size: rem-calc(12);
+}
+
+body {
+  font-family: base.$primary-font;
+  min-height: 100%;
+  height: 100%;
+}
+
+img {
+  max-width: 100%;
+}
+
+a {
+  color: base.$primary-yellow;
+  text-decoration: underline;
+}
+
+@include mat.form-field-density(-4); //Para hacer los inputs y selectores (y otros inputs) más estrechos

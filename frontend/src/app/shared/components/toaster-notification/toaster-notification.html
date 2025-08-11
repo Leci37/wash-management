@@ -1,0 +1,14 @@
+@if(toasters && toasters.length > 0) {
+  <div class="toaster-notification__container">
+    @for(item of toasters; track item) {
+      <div class="toaster-notification__toast {{cssClass(item)}}" aria-live="polite">
+        <div class="toaster-notification__message">
+          {{ item.message | translate }}
+        </div>
+        <button type="button" class="toaster-notification__close" (click)="removeNotification(item)" aria-label="Close notification">
+          ×
+        </button>
+      </div>
+    }
+  </div>
+}

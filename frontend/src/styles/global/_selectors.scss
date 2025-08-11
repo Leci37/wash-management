@@ -1,0 +1,19 @@
+@use '../base' as *;
+@use '@angular/material' as mat;
+
+.selector {
+  // @include mat.form-field-density(-4);
+  &.mat-mdc-select-panel {
+    background: $white;
+  }
+  &.mat-mdc-floating-label {
+    color: $text-secondary;
+  }
+  // @include mat.select-overrides((
+  //   panel-background-color: $white,
+  //   enabled-trigger-text-color: $text-secondary,
+  //   disabled-trigger-text-color: $text-dark,
+  //   placeholder-text-color: $primary-yellow,
+  // ));
+}
+

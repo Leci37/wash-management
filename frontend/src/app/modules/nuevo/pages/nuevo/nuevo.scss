@@ -1,0 +1,44 @@
+@use 'base' as *;
+
+.manual-entry {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  
+  .manual-input {
+    flex: 1;
+  }
+}
+.prots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 14px;
+
+  .prots-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px;
+    background-color: $white;
+    border-radius: 4px;
+    border: 1px solid $gray-light;
+    font-size: $font-size-sm;
+
+    .prot-label {
+      color: $text-dark;
+    }
+
+    .prot-remove {
+    cursor: pointer;
+      color: $gray-medium;
+      border: none;
+      background: none;
+      // margin: 0px;
+      // padding: 0px;
+    }
+  }
+  .check-icon {
+    // color: $white;
+  }
+}

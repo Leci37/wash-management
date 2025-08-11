@@ -1,0 +1,14 @@
+<div class="dialog">
+    <p mat-dialog-title class="dialog__title">{{ 'Vas a añadir la siguiente foto:' | translate  }}</p>
+    <div mat-dialog-content class="dialog__content">
+    <img [src]="photo?.photo" alt="Foto a añadir" class="dialog__image">
+    </div>
+    <div mat-dialog-actions class="dialog__actions">
+        <button class="btn btn--tertiary" [mat-dialog-close]="null">
+            <mat-icon>close</mat-icon>  
+        </button>
+        <button class="btn btn--primary" [mat-dialog-close]="photo">
+            <mat-icon>check</mat-icon>
+        </button>
+    </div>
+</div>

@@ -1,0 +1,4 @@
+# It's a good idea not to format the dependencies folder, since every time you add a new dependency npm usually does that
+package.json
+package-lock.json
+dist

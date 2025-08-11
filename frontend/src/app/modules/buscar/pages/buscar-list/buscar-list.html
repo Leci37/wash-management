@@ -1,0 +1,16 @@
+<div class="page">
+  <div class="section">
+    <div class="lavado-list">
+      @for (lavado of lavados$ | async; track lavado) {
+        <div class="lavado-item">
+          <div class='lavado-fecha'>
+            {{ lavado.startDate | date: 'dd/MM/yyyy' }}
+          </div>
+          <div class='lavado-text'>
+            {{ lavado.startUserId}} - {{ lavado.prots }}
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

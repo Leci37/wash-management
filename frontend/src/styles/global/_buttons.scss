@@ -1,0 +1,84 @@
+@use '../base' as *;
+@use '@angular/material' as mat;
+
+
+.btn {
+  @include btn-base;
+
+  &--primary {
+    background-color: $primary-yellow;
+    color: $white;
+
+    &:hover {
+      background-color: darken($primary-yellow, 5%);
+    }
+  }
+
+  &--secondary {
+    background-color: $white;
+    color: $primary-yellow;
+    border: 2px solid $primary-yellow;
+
+    &:hover {
+      background-color: darken($white, 5%);
+    }
+  }
+
+  &--tertiary {
+    background-color: $white;
+    color: $text-dark;
+    border: 2px solid $gray-dark;
+
+    &:hover {
+      background-color: darken($gray-light, 5%);
+    }
+  }
+  &:disabled {
+    background-color: #d1d1d1;
+    color: $text-dark;
+    border: none;
+    cursor: not-allowed;
+    .btn-label,
+    .btn-subtitle {
+      color: $secondary-text;
+    }
+  }
+}
+
+.btn-with-icon {
+  @include btn-base;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  &--primary {
+    background-color: $primary-yellow;
+    color: $white;
+
+    &:hover {
+      background-color: darken($primary-yellow, 5%);
+    }
+  }
+
+  &--secondary {
+    background-color: $white;
+    color: $primary-yellow;
+    border: 1px solid $primary-yellow;
+
+    &:hover {
+      background-color: darken($white, 5%);
+    }
+  }
+}
+
+.add_btn {
+  @include mat.fab-overrides((
+    small-container-color: $primary-yellow,
+    small-foreground-color: $white,
+    small-container-elevation-shadow: none,
+  ));
+}
+.menu-btn {
+  min-height: 3.5rem;
+}

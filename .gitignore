@@ -1,0 +1,53 @@
+﻿# .NET
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+.vs/
+
+# Entity Framework
+*.edmx.diagram
+*.edmx.sql
+
+# Angular
+node_modules/
+dist/
+.angular/
+coverage/
+.nyc_output/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.mdf
+*.ldf
+
+# Logs
+logs/
+*.log
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Package files
+*.nupkg
+*.snupkg
+package-lock.json
+yarn.lock

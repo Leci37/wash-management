@@ -1,0 +1,26 @@
+<div class="shell">
+  <div class="title">
+    <span>{{ title() | translate }}</span>
+  </div>
+
+  <div class="content">
+    <router-outlet></router-outlet>
+  </div>
+
+    <!-- <nav mat-tab-nav-bar [tabPanel]="tabPanel" disablePagination="true"> //FIXME arreglar tamaño de los items-->
+    <nav mat-tab-nav-bar [tabPanel]="tabPanel">
+      @for (link of links; track link) {
+        <a mat-tab-link
+          (click)="onGoTo(link)"
+          (keydown.enter)="onGoTo(link)"
+          tabindex="0"
+          [active]="activeLink() === link.path">
+          <div class="nav-item">
+            <mat-icon [svgIcon]="activeLink() === link.path ? link.activeIcon : link.icon"></mat-icon>
+            <span [ngClass]="activeLink() === link.path ? 'tab-label-active' : 'tab-label'">{{ link.label | translate }}</span>
+          </div>
+        </a>
+      }
+    </nav>
+    <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
+</div>

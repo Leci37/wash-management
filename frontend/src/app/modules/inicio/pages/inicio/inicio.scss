@@ -1,0 +1,15 @@
+@use 'base/index' as *;
+@use 'global/index' as *;
+
+.inicio {
+  text-align: center;
+  padding: 24px 16px;
+  background-color: $white;
+  height: 100%;
+
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+}

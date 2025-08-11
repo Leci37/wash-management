@@ -1,0 +1,51 @@
+@use 'base/index' as *;
+@use 'global/index' as *;
+@use '@angular/material' as mat;
+
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  // font-family: Roboto, 'Helvetica Neue', sans-serif;
+  font-family: $primary-font;
+  padding: 0;
+  overflow-x: hidden;
+  height: 100%;
+}
+
+@font-face {
+  font-family: 'Haverlock';
+  src: local('Haverlock'), url('/assets/fonts/Havelock-Titling-Regular.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Haverlock-Bold';
+  src: local('Haverlock-Bold'), url('/assets/fonts/Havelock-Titling-Bold.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: local('Montserrat'), url('/assets/fonts/Montserrat-Regular.otf') format('truetype');
+}
+
+.custom-dialog-container .mat-dialog-container {
+  padding: 0;
+}
+  :root {
+  @include mat.tabs-overrides((
+    active-focus-indicator-color: $primary-yellow,
+    active-focus-label-text-color: $primary-yellow,
+    active-indicator-color: $primary-yellow,
+  ));
+  @include mat.select-overrides((
+    panel-background-color: $white,
+    enabled-trigger-text-color: $text-secondary,
+    disabled-trigger-text-color: $text-dark,
+    placeholder-text-color: $primary-yellow,
+    enabled-arrow-color: $primary-yellow,
+  ));
+}  

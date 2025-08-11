@@ -1,0 +1,25 @@
+@use 'base/index' as *;
+
+.hidden {
+  visibility: hidden !important;
+}
+
+.text-uppercase {
+  text-transform: uppercase !important;
+}
+
+.link_underline {
+  text-decoration: underline;
+}
+
+.link_nounderlined {
+  text-decoration: none;
+}
+
+.text-area-noresizable {
+  resize: none;
+}
+
+.align-center {
+  align-items: center;
+}

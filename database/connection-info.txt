@@ -1,0 +1,27 @@
+﻿# SUMISAN Database Information
+# Generated: 2025-08-11 11:37:31
+
+## Connection Details
+Server: localhost,1434
+Database: SUMISAN
+Username: SA
+Password: Sumisan2024!
+
+## Docker Command to Recreate
+docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Sumisan2024!" -p 1434:1433 --name sumisan-db-dev -d mcr.microsoft.com/mssql/server:2022-latest
+
+## Tables Summary
+- USERS (48 rows)
+- MACHINES (4 rows)  
+- WASHINGS (30 rows)
+- PROTS (30 rows)
+- PHOTOS (6 rows)
+- PARAMETERS (4 rows)
+
+## Connection String for appsettings.json
+"DefaultConnection": "Server=localhost,1434;Database=SUMISAN;User Id=SA;Password=Sumisan2024!;TrustServerCertificate=true;"
+
+## Notes
+- Database schema matches wash-database-structure-spec.txt
+- Seed data exists for Users, Machines, and Parameters
+- EF Core migrations may need to be regenerated

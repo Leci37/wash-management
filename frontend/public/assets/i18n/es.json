@@ -1,0 +1,80 @@
+{ 
+  "ACCEPT": "Aceptar",
+  "CANCEL": "Cancelar",
+  "CONFIRM": "Confirmar",
+  "SAVE": "Guardar",
+  "DELETE": "Eliminar",
+  "YES": "Sí",
+  "NO": "No",
+  "INICIO": "Inicio",
+  "NUEVO": "Nuevo",
+  "BUSCAR": "Buscar",
+  "FINALIZAR": "Finalizar",
+  "SALIR": "Salir",
+  "FECHA": "Fecha",
+  "PERFIL": "Perfil",
+  "OPERARIO": "Operario/a",
+  "OPERARIOS": "Operarios/as",
+  "MAQUINA": "Máquina",
+  "MAQUINA_LAVADO": "Máquina de Lavado",
+  "PROT": "Prot",
+  "PROTS": "Prots",
+  "OBSERVACIONES": "Observaciones",
+  "VOLVER_INICIO": "Volver al inicio",
+  "ADMINISTRADOR": "Administrador",
+  "USUARIO_NORMAL": "Usuario Normal",
+  "UNSAVED_CHANGES_TITLE": "Tienes cambios sin guardar.",
+  "UNSAVED_CHANGES_TEXT": "Si sales ahora, perderás los cambios no guardados",
+  "M_INICIO": {
+    "NUEVO": "Nuevo Lavado",
+    "FIN_MAQ_1": "Lavado 1 / Máquina 1",
+    "FIN_MAQ_2": "Lavado 2 / Máquina 2",
+    "BUSCAR": "Buscar"
+  },
+  "M_NUEVO": {
+    "LAVADO_INICIADO_CHECK": "El lavado se ha iniciado correctamente",
+    "INICIO_LAVADO": "Inicio de Lavado",
+    "ESCANEAR_QR": "Escanear QR",
+    "INTRODUCCION_MANUAL": "Introducción manual",
+    "PROTS_EMPTY": "Aún no se han añadido prots",
+    "FORM_INCOMPLETO": "Por favor, completa todos los campos y añade al menos un prot",
+    "PROT_YA_EXISTE": "El prot ya está añadido",
+    "INICIAR_LAVADO_BTN": "Iniciar Lavado",
+    "CONFIRM_INICIO_LAVADO": "¿Estás seguro de que quieres iniciar el lavado?",
+    "INICIO_LAVADO_OK": "Lavado iniciado correctamente",
+    "INICIO_LAVADO_ERR": "Error al iniciar el lavado"
+  },
+  "M_FINALIZAR": {
+    "LAVADO_FINALIZADO_CHECK": "El lavado se ha finalizado correctamente",
+    "FIN_LAVADO": "Fin de Lavado",
+    "SACAR_FOTO": "Sacar Foto",
+    "ADJUNTAR_FOTOS": "Adjuntar Fotos",
+    "FOTOS": "Fotos",
+    "FOTOS_EMPTY": "Aún no se han añadido fotos",
+    "FINALIZAR_LAVADO_BTN": "Finalizar Lavado",
+    "FORM_INCOMPLETO": "Por favor, completa todos los campos y añade al menos una foto",
+    "CONFIRM_FINALIZAR_LAVADO": "¿Estás seguro de que quieres finalizar el lavado?",
+    "FINALIZAR_LAVADO_OK": "Lavado finalizado correctamente",
+    "FINALIZAR_LAVADO_ERR": "Error al finalizar el lavado"
+  },
+  "M_BUSCAR": {
+    "ERR_FECHA_INVALIDA": "Fecha inválida"
+  },
+  "TITLES": {
+    "INICIO": "Gestión de Lavados",
+    "NUEVO_LAVADO": "Nuevo Lavado",
+    "LAVADO_INICIADO": "Lavado Iniciado",
+    "FINALIZAR_LAVADO": "Finalizar Lavado",
+    "LAVADO_FINALIZADO": "Lavado Finalizado",
+    "PERFIL": "Perfil",
+    "BUSCAR_LAVADO": "Búsqueda de Lavados",
+    "BUSCAR_RES": "Resultado"
+  },
+  "NAV_TAB": {
+    "INICIO": "Inicio",
+    "BUSCAR": "Buscar",
+    "NUEVO": "Nuevo",
+    "FINALIZAR": "Finalizar",
+    "PERFIL": "Perfil"
+  }
+}

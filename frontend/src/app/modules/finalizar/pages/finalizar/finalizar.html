@@ -1,0 +1,73 @@
+<div class="page">
+  <form [formGroup]="form">
+
+    @if (showLavadoFinalizado) {
+    <div class="section align-center" > <!-- Check / Texto (lavado finalizado) -->
+      <mat-icon svgIcon="check_circle"></mat-icon>
+      <p>{{'M_FINALIZAR.LAVADO_FINALIZADO_CHECK' | translate}}</p>
+    </div>
+    }
+    <div class="section"> <!-- Operario -->
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="selector">
+        <mat-label>{{'OPERARIO' | translate}}</mat-label>
+        <mat-select formControlName="operario">
+          @for (user of operarios$ | async; track user) {
+          <mat-option [value]="user.userId">{{ user.userName }}</mat-option>
+        }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    @if (!showLavadoFinalizado) {
+      <div class="section"> <!-- Botones Fotos -->
+        <h2 class="section-title">{{'M_FINALIZAR.FIN_LAVADO' | translate}}</h2>
+        <!-- <button class="btn-with-icon btn-with-icon--secondary" (click)="onSacarFoto()"> -->
+          <button class="btn-with-icon btn-with-icon--secondary" (click)="fileInput.click()">
+          <mat-icon svgIcon="camera-yellow"></mat-icon>
+          <span>{{'M_FINALIZAR.SACAR_FOTO' | translate}}</span>
+        </button>
+            <button class="btn-with-icon btn-with-icon--secondary" (click)="onAdjuntarFotos()">
+          <mat-icon svgIcon="photo_gallery-yellow"></mat-icon>
+          <span>{{'M_FINALIZAR.ADJUNTAR_FOTOS' | translate}}</span>
+        </button>
+        <input hidden (change)="onFileSelected($event)" #fileInput type="file">
+      </div>
+    }
+    <div class="section"> <!-- Fotos añadidas -->
+      <h2 class="section-title">{{'M_FINALIZAR.FOTOS' | translate}}</h2>
+      @if (photos.length > 0) {
+        <div class="photo-list">
+          @for (item of photos; track item) {
+            <div class="photo-item">
+              @if (!showLavadoFinalizado) {
+                <button class="photo-remove-icon" (click)="onRemoveFoto(item)">
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+              <img class="photo-img" [src]="item.photo" [alt]="item.name">
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-state">
+          {{'M_FINALIZAR.FOTOS_EMPTY' | translate}}
+        </div>
+      }
+    </div>
+    <div class="section"> <!-- Observaciones -->
+      <mat-form-field class="observaciones" appearance="outline">
+        <textarea matInput formControlName="observaciones" placeholder="{{'OBSERVACIONES' | translate}}"></textarea>
+      </mat-form-field>
+    </div>
+    <div class="section"> <!-- Finalizar -->
+      @if (!showLavadoFinalizado) {
+        <button (click)="onFinalizarLavado()" class="btn-with-icon btn-with-icon--primary">
+          <mat-icon>pause</mat-icon>
+          {{'M_FINALIZAR.FINALIZAR_LAVADO_BTN' | translate}}
+        </button>
+      } @else {
+          <button (click)="onVolverInicio()" class="btn btn--secondary">
+          {{'VOLVER_INICIO' | translate}}
+          </button>
+      }  </div>
+  </form>
+</div>
