@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Controlmat.Domain.Interfaces;
 using Controlmat.Infrastructure.Persistence;
 using Controlmat.Infrastructure.Repositories;
+using Controlmat.Infrastructure.Services;
 
 namespace Controlmat.Infrastructure
 {
@@ -22,6 +23,9 @@ namespace Controlmat.Infrastructure
             services.AddScoped<IProtRepository, ProtRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IMachineRepository, MachineRepository>();
+
+            // Services
+            services.AddScoped<IAuthenticationService, AuthenticationService>();
 
             return services;
         }
