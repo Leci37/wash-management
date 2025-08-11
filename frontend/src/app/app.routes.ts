@@ -8,6 +8,7 @@ import { Perfil } from './modules/perfil/pages/perfil/perfil';
 import { confirmSavedChanges } from './core/guard/unsavedChanges';
 import { Buscar } from './modules/buscar/pages/buscar/buscar';
 import { BuscarList } from './modules/buscar/pages/buscar-list/buscar-list';
+import { ApiTest } from './modules/api-test/api-test';
 
 export enum NavigationRoutes {
   Inicio = 'inicio',
@@ -20,6 +21,7 @@ export enum NavigationRoutes {
   Perfil = 'perfil',
 }
 export const routes: Routes = [
+  { path: 'api-test', component: ApiTest },
   {
     path: '',
     component: Shell,

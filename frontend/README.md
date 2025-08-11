@@ -390,3 +390,21 @@ npx http-server dist/controlmat-desk
 ---
 
 **Ready for Backend Integration!** 🔌 The frontend is complete and waiting for real API connections to transform from a beautiful prototype into a fully functional wash management system.
+
+## API Testing UI
+
+A lightweight page is available for manual testing of the washing endpoints.
+
+### How to run locally
+
+1. Start the backend API (see backend README).
+2. In a separate terminal run:
+
+```bash
+cd frontend
+npm start
+```
+
+3. Navigate to [http://localhost:4200/api-test](http://localhost:4200/api-test) to start a wash and view active washes.
+
+Requests are proxied to `http://localhost:5274/api` using `proxy.conf.json`.
