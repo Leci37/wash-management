@@ -8,6 +8,8 @@ import { Perfil } from './modules/perfil/pages/perfil/perfil';
 import { confirmSavedChanges } from './core/guard/unsavedChanges';
 import { Buscar } from './modules/buscar/pages/buscar/buscar';
 import { BuscarList } from './modules/buscar/pages/buscar-list/buscar-list';
+import { AuthGuard } from './core/guard/auth.guard';
+import { Login } from './modules/login/pages/login/login';
 
 export enum NavigationRoutes {
   Inicio = 'inicio',
@@ -20,10 +22,11 @@ export enum NavigationRoutes {
   Perfil = 'perfil',
 }
 export const routes: Routes = [
+  { path: 'login', component: Login },
   {
     path: '',
     component: Shell,
-    // canActivate: [AuthGuard],
+    canActivate: [AuthGuard],
     children: [
       {
         path: NavigationRoutes.Inicio,

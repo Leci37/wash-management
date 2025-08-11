@@ -1,0 +1,11 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form">
+  <mat-form-field appearance="fill">
+    <input matInput placeholder="User" formControlName="userName" />
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <input matInput placeholder="Password" type="password" formControlName="password" />
+  </mat-form-field>
+  <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+    Login
+  </button>
+</form>

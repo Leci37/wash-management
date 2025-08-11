@@ -10,10 +10,11 @@ import {
   TranslateLoader,
   TranslateModule,
 } from '@ngx-translate/core';
-import { HttpClient, provideHttpClient } from '@angular/common/http';
+import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 import { routes } from './app.routes';
+import { authInterceptor } from './core/services/auth-interceptor';
 
 function createTranslateLoader(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -27,7 +28,7 @@ export const appConfig: ApplicationConfig = {
     provideTranslateService({
       defaultLanguage: 'es',
     }),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([authInterceptor])),
     importProvidersFrom(
       // KeycloakAngularModule,
       TranslateModule.forRoot({
