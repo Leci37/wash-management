@@ -2,8 +2,6 @@ using Serilog;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
-using controlmat.Application;
-using controlmat.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,55 +9,12 @@ builder.Host.UseSerilog((ctx, lc) => lc
     .WriteTo.Console()
     .Enrich.WithEnvironmentUserName());
 
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+// Add services to the container.
 
 builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new() { Title = "controlmat.Api", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme."
-    });
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
-        {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            }, new string[] {}
-        }
-    });
-});
-
-var jwtSection = builder.Configuration.GetSection("Jwt");
-var key = System.Text.Encoding.UTF8.GetBytes(jwtSection["Key"]!);
-
-builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSection["Issuer"],
-            ValidAudience = jwtSection["Audience"],
-            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key)
-        };
-    });
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -72,7 +27,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
