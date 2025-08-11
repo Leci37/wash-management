@@ -1,0 +1,19 @@
+<div class="api-test">
+  <h2>Start Wash</h2>
+  <form [formGroup]="form">
+    <label>Machine ID <input type="number" formControlName="machineId"></label>
+    <label>Start User ID <input type="number" formControlName="startUserId"></label>
+    <label>Observation <input formControlName="startObservation"></label>
+    <label>Prot ID <input formControlName="protId"></label>
+    <label>Batch Number <input formControlName="batchNumber"></label>
+    <label>Bag Number <input formControlName="bagNumber"></label>
+    <button type="button" (click)="start()">Start</button>
+  </form>
+  <h2>Active Washes</h2>
+  <button (click)="loadActive()">Refresh</button>
+  <ul>
+    <li *ngFor="let w of activeWashes">
+      {{w.washingId}} - Machine {{w.machineId}} - {{w.startUserName}}
+    </li>
+  </ul>
+</div>

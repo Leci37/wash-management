@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\controlmat.Infrastructure\controlmat.Infrastructure.csproj" />
+    <ProjectReference Include="..\controlmat.Domain\controlmat.Domain.csproj" />
   </ItemGroup>
 
 </Project>
