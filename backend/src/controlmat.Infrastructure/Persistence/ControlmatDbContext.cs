@@ -13,7 +13,11 @@ public class ControlmatDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
 
+
+    public DbSet<Parameter> Parameters => Set<Parameter>();
+
     public DbSet<Machine> Machines => Set<Machine>();
+
 
     public DbSet<Photo> Photos => Set<Photo>();
 
@@ -27,6 +31,9 @@ public class ControlmatDbContext : DbContext
     {
 
         modelBuilder.ApplyConfiguration(new UserConfiguration());
+
+        modelBuilder.ApplyConfiguration(new ParameterConfiguration());
+
 
         modelBuilder.ApplyConfiguration(new PhotoConfiguration());
 
