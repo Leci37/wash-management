@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-namespace controlmat.Application.Common.Dto;
+namespace Controlmat.Application.Common.Dto;
 
 public class PhotoUploadDto
 {

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Controlmat.Domain.Entities;
-using controlmat.Infrastructure.Configurations;
+using Controlmat.Infrastructure.Configurations;
 
-namespace controlmat.Infrastructure.Persistence;
+namespace Controlmat.Infrastructure.Persistence;
 
 public class ControlmatDbContext : DbContext
 {

@@ -2,7 +2,7 @@
 using System;
 
 
-namespace controlmat.Application.Common.Dto;
+namespace Controlmat.Application.Common.Dto;
 
 public class PhotoDto
 {

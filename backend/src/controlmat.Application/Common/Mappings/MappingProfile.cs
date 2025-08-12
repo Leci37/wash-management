@@ -1,8 +1,8 @@
 using AutoMapper;
-using controlmat.Application.Common.Dto;
-using controlmat.Domain.Entities;
+using Controlmat.Application.Common.Dto;
+using Controlmat.Domain.Entities;
 
-namespace controlmat.Application.Common.Mappings;
+namespace Controlmat.Application.Common.Mappings;
 
 public class MappingProfile : Profile
 {

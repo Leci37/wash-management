@@ -2,7 +2,7 @@ using Controlmat.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace controlmat.Infrastructure.Configurations;
+namespace Controlmat.Infrastructure.Configurations;
 
 public class PhotoConfiguration : IEntityTypeConfiguration<Photo>
 {

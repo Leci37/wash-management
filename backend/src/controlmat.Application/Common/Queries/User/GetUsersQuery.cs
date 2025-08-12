@@ -1,10 +1,10 @@
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using controlmat.Application.Common.Dto;
-using controlmat.Domain.Interfaces;
+using Controlmat.Application.Common.Dto;
+using Controlmat.Domain.Interfaces;
 
-namespace controlmat.Application.Common.Queries.User;
+namespace Controlmat.Application.Common.Queries.User;
 
 public static class GetUsersQuery
 {

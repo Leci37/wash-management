@@ -2,7 +2,7 @@ using Serilog;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
-using controlmat.Application;
+using Controlmat.Application;
 using Controlmat.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
