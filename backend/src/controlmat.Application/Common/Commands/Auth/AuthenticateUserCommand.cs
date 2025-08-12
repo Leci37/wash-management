@@ -32,8 +32,9 @@ public static class AuthenticateUserCommand
         {
             await _validator.ValidateAndThrowAsync(request.Dto, cancellationToken);
 
-            var user = await _userRepository.GetByUserNameAsync(request.Dto.UserName);
-            if (user == null || user.PasswordHash == null || !BCrypt.Verify(request.Dto.Password, user.PasswordHash))
+            var user = await _userRepository.GetByUserNameAsync(request.Dto.UserName)
+                ?? throw new UnauthorizedAccessException();
+            if (user.PasswordHash == null || !BCrypt.Verify(request.Dto.Password, user.PasswordHash))
             {
                 throw new UnauthorizedAccessException();
             }
