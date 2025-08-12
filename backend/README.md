@@ -48,7 +48,7 @@ backend/
 ### Phase 1: Domain Foundation
 ```csharp
 // controlmat.Domain/Entities/
-- User.cs          # UserId, UserName, Role
+- User.cs          # UserId, UserName
 - Machine.cs       # Id, Name  
 - Washing.cs       # WashingId, MachineId, UserIds, Status, Dates
 - Prot.cs          # WashingId, ProtId, BatchNumber, BagNumber
