@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using MediatR;
 using Controlmat.Application.Common.Commands.Washing;
 using Controlmat.Application.Common.Queries.Washing;
+using Controlmat.Application.Common.Queries.User;
+using Controlmat.Application.Common.Queries.Machine;
 using Controlmat.Application.Common.Dto;
 using System.ComponentModel.DataAnnotations;
 
@@ -131,18 +133,28 @@ namespace Controlmat.Api.Controllers
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> UploadPhoto([Required] long id, IFormFile file, string? description = null)
         {
-            _logger.LogInformation("📝 POST /api/washing/{WashingId}/photos - FileName: {FileName}, Size: {Size} bytes", 
-                id, file?.FileName, file?.Length ?? 0);
+            if (file == null)
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "File Required",
+                    Detail = "No file was uploaded",
+                    Status = 400
+                });
+            }
+
+            _logger.LogInformation("📝 POST /api/washing/{WashingId}/photos - FileName: {FileName}, Size: {Size} bytes",
+                id, file.FileName, file.Length);
 
             try
             {
-                var fileName = await _mediator.Send(new UploadPhotoCommand.Request 
-                { 
-                    WashingId = id, 
+                var fileName = await _mediator.Send(new UploadPhotoCommand.Request
+                {
+                    WashingId = id,
                     File = file,
                     Description = description
                 });
-                
+
                 return CreatedAtAction(nameof(GetWashById), new { id }, fileName);
             }
             catch (ArgumentException ex)
@@ -153,13 +165,13 @@ namespace Controlmat.Api.Controllers
             catch (InvalidOperationException ex)
             {
                 _logger.LogWarning("⚠️ Business rule violation: {Message}", ex.Message);
-                
+
                 if (ex.Message.Contains("not found"))
                     return NotFound(new ProblemDetails { Title = "Wash Not Found", Detail = ex.Message, Status = 404 });
-                    
+
                 if (ex.Message.Contains("99 photos"))
                     return Conflict(new ProblemDetails { Title = "Photo Limit Exceeded", Detail = ex.Message, Status = 409 });
-                    
+
                 return BadRequest(new ProblemDetails { Title = "Upload Error", Detail = ex.Message, Status = 400 });
             }
         }
