@@ -1,4 +1,4 @@
-using controlmat.Domain.Entities;
+using Controlmat.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

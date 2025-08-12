@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using controlmat.Domain.Entities;
+using Controlmat.Domain.Entities;
 using controlmat.Infrastructure.Configurations;
 
 namespace controlmat.Infrastructure.Persistence;
