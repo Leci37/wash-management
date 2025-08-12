@@ -1,5 +1,6 @@
-
+using System;
 using System.Collections.Generic;
+
 namespace controlmat.Domain.Entities;
 
 public class Washing
@@ -22,3 +23,4 @@ public class Washing
 
     public ICollection<Photo> Photos { get; set; } = new List<Photo>();
 }
+

@@ -64,7 +64,7 @@ backend/
 ### Phase 2: Infrastructure Setup
 ```csharp
 // controlmat.Infrastructure/
-- ControlmatDbContext.cs      # EF Core context
+- SumisanDbContext.cs      # EF Core context
 - Repositories/               # Repository implementations
 - DependencyInjection.cs      # Service registration
 - Migrations/                 # Database migrations
