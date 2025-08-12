@@ -1,25 +1,4 @@
 ✅ DTO DEFINITIONS
-🔐 LoginRequestDTO
-Used to authenticate a user.
-
-json
-Copiar
-Editar
-{
-  "userName": "string",
-  "password": "string"
-}
-🔐 LoginResponseDTO
-Returned after successful login.
-
-json
-Copiar
-Editar
-{
-  "token": "string",          // JWT
-  "userId": 1,
-  "role": "WarehouseUser"
-}
 🚿 NewWashDTO
 Used to start a new wash.
 

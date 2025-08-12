@@ -18,7 +18,6 @@ public class ControlmatDbContext : DbContext
         {
             entity.HasKey(e => e.UserId);
             entity.Property(e => e.UserName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.PasswordHash);
             entity.Property(e => e.Role).IsRequired();
         });
     }

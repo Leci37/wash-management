@@ -175,7 +175,7 @@ Static assets and configuration
 | **Photo Upload**    | Stores in base64 array                | Must upload file to `/photos` endpoint (multipart/form-data)      |
 | **Start Wash DTO**  | Uses `LavadoVO`                       | Needs `NewWashDTO` with structured `protEntries[]`                |
 | **Finish Wash DTO** | Sends full `LavadoVO` with `photos[]` | Only expects `FinishWashDTO`; photos must be uploaded separately  |
-| **Authentication**  | Not implemented                       | Expects `/auth/login` and JWT Bearer for protected routes         |
+| **Authentication**  | Keycloak OIDC redirect via keycloak-js | API expects Bearer token from Keycloak |
 | **Validation**      | Basic (required fields)               | Backend enforces regex patterns, constraints via FluentValidation |
 | **Data Source**     | Uses mock memory (no HTTP)            | Requires HTTP client integration for real API                     |
 
@@ -198,29 +198,19 @@ Defined in:
 
 ## 🔐 Authentication Plan
 
-Backend requires JWT:
+Frontend uses Keycloak for authentication:
 
-```http
-POST /api/auth/login
-{
-  "userName": "...",
-  "password": "..."
-}
-```
-
-Frontend **must:**
-
-* Add `/login` route and component
-* Store JWT in localStorage
-* Add `AuthGuard`
-* Add `AuthInterceptor` for attaching tokens to HTTP calls
+* Initialize Keycloak using `keycloak-js` or `angular-oauth2-oidc`.
+* Rely on Keycloak redirect for login and token refresh.
+* Use an `AuthGuard` to ensure a valid Keycloak session.
+* Use an `AuthInterceptor` to attach the Bearer token to HTTP calls.
 
 ---
 
 ## ✅ TODO / Missing Items (Now Completed)
 
 * ✅ Replace mock `data-api.ts` with real `HttpClient` service methods
-* ✅ Implement `/login` route, JWT token storage, and login form
+* ✅ Integrate Keycloak-based login flow with token storage and refresh
 * ✅ Add `AuthInterceptor` to inject JWT into headers
 * ✅ Add `AuthGuard` to protect routes like `/nuevo` and `/finalizar`
 * ✅ Refactor `LavadoVO` into clean `NewWashDTO` and `FinishWashDTO` submission payloads

@@ -3,7 +3,7 @@ Entity Framework Core Models
 To fulfill the functional specification, we define the following EF Core entity models (with code-first approach for migrations
 learn.microsoft.com
 ):
-User – Represents a warehouse user who can start/finish washes. Fields: UserId (int primary key), UserName (string). In practice, we'd also store authentication info (e.g. password hash and a role flag) for login. According to the spec, this app is accessed by a general “Warehouse User” role. Each user can be assigned a role (e.g. WarehouseWorker role).
+User – Represents a warehouse user who can start/finish washes. Fields: UserId (int primary key), UserName (string), Role.
 Machine – Washing machine identifier. Fields: Id (smallint PK) and Name (string up to 50 chars). There are two machines (Machine 1 and 2), and at most one active wash per machine is allowed at a time (enforcing max two concurrent washes total).
 Washing – Represents a wash process record. Key fields:
 WashingId (long/string) – a unique ID in the format YYMMDDXX (date + two-digit sequence). This can be generated when a new wash is started.
@@ -25,8 +25,6 @@ We use DTO classes to shape the data for requests/responses, isolating our inter
 medium.com
 medium.com
 . Key DTOs include:
-LoginRequestDTO – includes UserName and Password. This is used by the login API to authenticate a user.
-LoginResponseDTO – includes authentication result data, e.g. a JWT token or user info and roles if login is successful.
 NewWashDTO – used when starting a new wash. Contains necessary info to initiate a wash:
 MachineId (int) – which machine to use.
 StartUserId (int) – the user starting the wash.
@@ -67,7 +65,7 @@ exceptionnotfound.net
 .
 Authentication & Authorization
 We implement user authentication via an AuthController and related service:
-AuthController – exposes POST /auth/login. The controller takes a LoginRequestDTO with username and password, then calls AuthService.Authenticate(username, password). If credentials are valid, the AuthService returns a JWT token (or session token) wrapped in a LoginResponseDTO. The controller returns this to the client. If invalid, it returns 401 Unauthorized.
+Authentication is delegated to Keycloak; the API does not expose login endpoints.
 AuthService – validates the user credentials. This could use ASP.NET Core Identity or a custom check against the Users table. Given the spec’s simplicity, a straightforward approach is to store a hashed password for each user in the Users table (along with their role), and verify it here. On success, the service will generate a JWT containing the user’s ID/name and role (e.g. a claim indicating the “WarehouseUser” role).
 Passwords are never stored in plaintext. We would hash and salt passwords and possibly use an Identity library for robust security.
 All subsequent endpoints are protected with JWT authorization. We configure JWT bearer authentication in the API, and decorate controllers or actions with [Authorize]. Role-based access control is enforced by specifying roles in the attribute (e.g. [Authorize(Roles="WarehouseUser")] on the wash management endpoints). Since only warehouse staff use this app, we might have a single role (e.g. WarehouseUser) for all authenticated users, but the setup supports extending roles if needed (for example, an admin role that could view reports, etc., could be added later).
