@@ -1,105 +1,101 @@
-✅ FINAL DATABASE STRUCTURE REVIEW
-🔹 1. USERS TABLE
-Column	Type	Constraint
-UserId	int	Primary Key
-UserName	varchar(100)	Required
-(optional)	PasswordHash	For login
-(optional)	Role	varchar(50)
+SUMISAN – Final Database Structure (Live‑Verified)
+Source of truth: SQL Server SUMISAN database (schema dump provided by user).
+Auth is Keycloak OIDC; local tables are not used for credential validation.
 
-Notes:
+1) USERS
+Purpose: Business reference for operators (not authentication).
 
-Used for login/auth
+Column	Type	Null	Key	Identity
+UserId	int	NO	PK	YES
+UserName	varchar(100)	NO		NO
 
-Referenced by Washing.StartUserId and Washing.EndUserId
+Notes: No Role/Password columns. Handlers map Keycloak claims to local users if needed.
 
-🔹 2. MACHINES TABLE
-Column	Type	Constraint
-Id	smallint	Primary Key
-Name	varchar(50)	Required
+2) MACHINES
+Purpose: Wash machines catalog.
 
-Notes:
+Column	Type	Null	Key	Identity
+Id	smallint	NO	PK	NO
+Name	varchar(50)	NO		NO
 
-2 rows max (Machine 1 and Machine 2)
+Notes: Business rule allows 2 logical machines (not enforced by DB).
 
-Referenced by Washing.MachineId
+3) WASHINGS
+Purpose: Wash cycle header.
 
-🔹 3. WASHINGS TABLE
-Column	Type	Constraint
-WashingId	bigint	Primary Key (Format: YYMMDDXX)
-MachineId	smallint	FK → Machines.Id
-StartUserId	int	FK → Users.UserId
-EndUserId	int?	FK → Users.UserId, nullable
-StartDate	datetime	Required
-EndDate	datetime?	Optional
-Status	char(1)	Required — values: 'P' (progress), 'F' (finished)
-StartObservation	varchar(100)	Optional
-FinishObservation	varchar(100)	Optional
+Column	Type	Null	Key	Identity
+WashingId	bigint	NO	PK	NO
+MachineId	smallint	NO	FK→ MACHINES(Id)	NO
+StartUserId	int	NO	FK→ USERS(UserId)	NO
+EndUserId	int	YES	FK→ USERS(UserId)	NO
+StartDate	datetime	NO		NO
+EndDate	datetime	YES		NO
+Status	char(1)	NO		NO
+StartObservation	varchar(100)	YES		NO
+FinishObservation	varchar(100)	YES		NO
 
-Relationships:
+Business meanings:
+Status: ‘P’ (in progress) / ‘F’ (finished). WashingId uses YYMMDDXX sequence (enforced in handlers).
 
-1 Machine → many Washings
+FKs:
 
-1 User → many Started Washings
+FK__WASHINGS__Machin__3B75D760 → MACHINES(Id)
 
-1 User → many Finished Washings
+FK__WASHINGS__StartU__3C69FB99 → USERS(UserId)
 
-1 Washing → many Prots
+FK__WASHINGS__EndUse__3D5E1FD2 → USERS(UserId)
 
-1 Washing → many Photos
+4) PROTS
+Purpose: Instrument kits scanned for a wash.
 
-Business Rules:
+Column	Type	Null	Key	Identity
+Id	int	NO	PK	YES
+WashingId	bigint	NO	FK→ WASHINGS(WashingId)	NO
+ProtId	varchar(7)	NO		NO
+BatchNumber	varchar(4)	NO		NO
+BagNumber	varchar(5)	NO		NO
 
-Max 2 active washes (Status = P) at a time
+FK: FK__PROTS__WashingId__412EB0B6 → WASHINGS(WashingId)
 
-Must have ≥1 Prot to start
+Formats (validated in app):
+ProtId = PROT###, BatchNumber = NL##, BagNumber = ##/##.
 
-Must have ≥1 Photo to finish
+5) PHOTOS
+Purpose: Evidence photos for a wash.
 
-🔹 4. PROTS TABLE
-Column	Type	Constraint
-Id	int	Primary Key
-WashingId	bigint	FK → Washings.WashingId
-ProtId	varchar(7)	Format PROTXXX
-BatchNumber	varchar(4)	Format NLXX
-BagNumber	varchar(5)	Format XX/XX (e.g. 01/02)
+Column	Type	Null	Key	Identity
+Id	int	NO	PK	YES
+WashingId	bigint	NO	FK→ WASHINGS(WashingId)	NO
+FileName	varchar(255)	NO		NO
+FilePath	varchar(255)	NO		NO
+CreatedAt	datetime	NO		NO
 
-Notes:
+FK: FK__PHOTOS__WashingI__440B1D61 → WASHINGS(WashingId)
 
-At least one prot is mandatory to start a wash
+Notes: CreatedAt exists in DB (use it for auditing). Naming {WashingId}_{XX}.jpg and max‑99 photos are enforced in handlers.
 
-Unlimited prots per wash allowed
+6) PARAMETERS
+Purpose: Simple configuration store.
 
-🔹 5. PHOTOS TABLE
-Column	Type	Constraint
-Id	int	Primary Key
-WashingId	bigint	FK → Washings.WashingId
-FileName	varchar(255)	Format {WashingId}_{XX}.jpg
-FilePath	varchar(255)	Full or relative path
+Column	Type	Null	Key	Identity
+Id	int	NO	PK	YES
+Name	varchar(50)	NO		NO
+Value	varchar(255)	NO		NO
 
-Rules:
+Typical key: ImagePath → base folder for photos.
 
-Photos stored in: {ImagePath}/{Year}/{WashingId}_{XX}.jpg
+Entity Relationships (Summary)
+WASHINGS — M:1 → MACHINES (MachineId)
 
-Must have at least 1 photo to finalize wash
+WASHINGS — M:1 → USERS (StartUserId, EndUserId)
 
-Max 99 photos per wash allowed
+PROTS — M:1 → WASHINGS (WashingId)
 
-🔹 6. PARAMETERS TABLE
-Column	Type	Constraint
-Id	int	Primary Key
-Name	varchar(50)	Required
-Value	varchar(255)	Required
+PHOTOS — M:1 → WASHINGS (WashingId)
 
-Used For:
+Differences vs previous spec
+Removed optional PasswordHash/Role from USERS (not in DB).
 
-ImagePath: e.g., /shared/photos
+Added PHOTOS.CreatedAt (present in DB but missing in old spec).
 
-Can be extended to support more config values later
-
-✅ ENTITY RELATIONSHIP TABLE
-Source Table	FK Column	Target Table	Relationship
-Washing	MachineId	Machine	Many-to-One
-Washing	StartUserId	User	Many-to-One
-Washing	EndUserId	User	Many-to-One
-Prot	WashingId	Washing	Many-to-One
-Photo	WashingId	Washing	Many-to-One
+Clarified identity columns: USERS.UserId, PARAMETERS.Id, PHOTOS.Id, PROTS.Id are identity; MACHINES.Id and WASHINGS.WashingId are not identity (by design).
