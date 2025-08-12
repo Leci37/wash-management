@@ -1,0 +1,91 @@
+✅ DEPLOYMENT & CONFIGURATION GUIDE
+🔹 1. Application Settings (appsettings.json)
+json
+Copiar
+Editar
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=SumisanDb;User Id=sa;Password=YourPassword123;"
+  },
+  "Jwt": {
+    "Key": "YourSuperSecretJwtKey1234567890",
+    "Issuer": "SumisanIssuer",
+    "Audience": "SumisanAudience",
+    "ExpireMinutes": 60
+  },
+  "ImageStorage": {
+    "RootPath": "/shared/photos"
+  }
+}
+🔹 2. EF Core DbContext Registration
+csharp
+Copiar
+Editar
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+Run migrations on deployment:
+
+bash
+Copiar
+Editar
+dotnet ef database update
+🔹 3. JWT Authentication Setup
+csharp
+Copiar
+Editar
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = config["Jwt:Issuer"],
+            ValidAudience = config["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]))
+        };
+    });
+
+builder.Services.AddAuthorization();
+Use [Authorize(Roles = "WarehouseUser")] in all protected controllers.
+
+🔹 4. Image Storage Directory
+Controlled via ImageStorage:RootPath (e.g., /shared/photos)
+
+Structure:
+
+swift
+Copiar
+Editar
+/shared/photos/{Year}/{WashingId}_{XX}.jpg
+Ensure write access to this directory for the backend process
+
+🔹 5. Environment Variables (Optional Override)
+Can override via environment:
+
+bash
+Copiar
+Editar
+export ASPNETCORE_ENVIRONMENT=Production
+export ConnectionStrings__DefaultConnection="..."
+export Jwt__Key="..."
+export ImageStorage__RootPath="/mounted/photos"
+🔹 6. Swagger for API Debugging
+csharp
+Copiar
+Editar
+builder.Services.AddSwaggerGen();
+// ...
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+🔹 7. Required Roles (User Table)
+Insert or seed users with:
+
+Role: "WarehouseUser"
+
+Username/password setup with hashed passwords (via Identity or custom)

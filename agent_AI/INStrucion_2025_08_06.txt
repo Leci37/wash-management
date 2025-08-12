@@ -1,0 +1,89 @@
+Behave like a senior C# .NET Core 6 Architect with Angular JS . You will help me design and architect an application.
+
+--------------------
+✅ Agent Documentation File Overview
+File Name	Description (for the Agent)
+wash-management-agent-spec.txt	Defines the overall backend architecture for SUMISAN. Includes service and controller design, business rules, entity relationships, authentication setup, and use cases like starting/finishing a wash. This is the agent’s core reference for implementation logic and layering.
+CleanDotnetTemplate.cs	A clean modular .NET 6 architecture scaffold showing how to structure layers: Domain, Application, Infrastructure, and API. Agents can use this as a template to scaffold new modules following best practices.
+wash-api-endpoints-spec.txt	The official specification of all REST API endpoints in SUMISAN. For each endpoint, defines route, method, request/response format, DTOs involved, and business rule enforcement. Agents use this to implement, test, or extend controller logic.
+wash-database-structure-spec.txt	Contains the complete relational database model: tables, fields, data types, constraints, and entity relationships. Includes business rule validations (like max 2 active washes) and naming conventions. Reference for EF Core modeling and migrations.
+wash-dtos-spec.txt	Lists and defines all DTOs (Data Transfer Objects) used by the API. Backend agents use this to understand input/output contracts, align controller signatures, and configure AutoMapper mappings.
+wash-validation-rules.txt	Centralized summary of FluentValidation rules for each DTO. Also distinguishes between field-level validation and business rules enforced in services. Required for implementing robust backend input validation.
+wash-error-codes.txt	Maps each API endpoint to its expected HTTP status codes and error scenarios. Helps agents return consistent responses (e.g., 409 for machine in use, 403 for missing photo), and improves frontend-backend integration.
+wash-deployment-config.txt	Full deployment guide for backend configuration. Includes appsettings.json, JWT setup, EF Core registration, Swagger, image storage paths, and recommended environment variables. Agents use this to configure local or production environments correctly.
+wash-logging-strategy.txt Logging strategy for the SUMISAN Wash Management System backend.
+Defines log levels, structure, output format, and best practices for tracking the execution of service methods, including thread information, input/output, and error handling. Logs are persisted to a .log file using Serilog.
+-------------------- 
+
+
+This tool is a warehouse-focused web application for managing the washing of medical instruments used in interventions. It provides authenticated operators with the ability to:
+
+Start new washes
+
+Scan or manually enter instrument data via QR code
+
+Record start/end observations
+
+Attach photo evidence
+
+Finalize ongoing washes
+
+🧩 Key Functional Capabilities You Must Support:
+Authentication:
+Warehouse users authenticate through Keycloak OIDC. The API never handles credentials or JWT issuance; clients must supply a Bearer token from Keycloak.
+
+Start New Wash:
+Users select a machine, scan/enter at least one PROT (instrument set), and optionally record observations. The system assigns a WashingId in YYMMDDXX format and stores related prot entries.
+
+Finish Wash:
+The wash cannot be finalized unless at least one photo is uploaded. The user may attach photos from the device or take them live. End observations are optional. The wash is marked complete when saved with Status = F.
+
+QR Code Scanning Support:
+PROT data can be added via QR scan or manual entry. Each prot has the fields:
+
+ProtId (e.g. PROT001)
+
+BatchNumber (e.g. NL01)
+
+BagNumber (e.g. 01/02)
+
+Photos & File Naming:
+Images must follow a strict file structure:
+
+swift
+Copiar
+Editar
+{ImagePath}/{Year}/{WashingId}_{XX}.jpg
+Sequential images per wash: up to 99 total
+
+ImagePath is a configurable parameter stored in the database
+
+Concurrency Rules:
+No more than 2 active washes may exist at any time. Each machine can only support one active wash.
+
+Backend Responsibilities Include:
+
+Validating DTO input (via FluentValidation)
+
+Enforcing business rules (via service layer)
+
+Managing images, database records, and relationships
+
+Exposing clear REST endpoints as per OpenAPI-like spec
+
+Returning meaningful HTTP status codes on success and error
+
+✅ Architecture Stack
+.NET 6 Web API
+
+EF Core Code-First + Migrations
+
+FluentValidation
+
+AutoMapper
+
+JWT-based Authentication
+
+Modular Clean Architecture (Domain / Application / Infrastructure / API)
+
+AngularJS (frontend, for integration context)

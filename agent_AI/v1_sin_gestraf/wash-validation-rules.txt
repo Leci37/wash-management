@@ -1,0 +1,51 @@
+✅ VALIDATION RULES BY DTO
+🔐 LoginRequestDTO
+plaintext
+Copiar
+Editar
+- userName: Required, max length 100
+- password: Required, min length 6 (recommend hashing on backend)
+🚿 NewWashDTO
+plaintext
+Copiar
+Editar
+- machineId: Required, must be 1 or 2
+- startUserId: Required
+- protEntries: Required, must contain ≥ 1 entry
+- startObservation: Optional, max length 100
+📦 AddProtDTO
+plaintext
+Copiar
+Editar
+- washingId: Required
+- protId: Required, format must match "PROT[0-9]{3}" (e.g. PROT001)
+- batchNumber: Required, format must match "NL[0-9]{2}" (e.g. NL01)
+- bagNumber: Required, format must match "[0-9]{2}/[0-9]{2}" (e.g. 01/02)
+🧺 FinishWashDTO
+plaintext
+Copiar
+Editar
+- endUserId: Required
+- finishObservation: Optional, max length 100
+🖼️ PhotoUpload (Multipart form-data)
+plaintext
+Copiar
+Editar
+- file: Required, must be image/jpeg or image/png
+- max 99 files per washing
+- each file size ≤ 5MB (enforce via config if needed)
+🧩 Parameter Entity (DB or config)
+plaintext
+Copiar
+Editar
+- name: Required, max length 50
+- value: Required, max length 255
+✅ Business Rule Validations (Handled in Services)
+These are not FluentValidation rules but enforced in the service layer:
+
+Rule	Enforced In
+Max 2 active washes allowed	WashService.StartNewWash
+Cannot start wash if machine already in use	WashService.StartNewWash
+Cannot finish wash if no photo exists	WashService.FinishWash
+Cannot add prot if wash is finished	WashService.AddProt
+Photo naming and sequence checks	PhotoService.SavePhoto

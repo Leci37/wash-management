@@ -1,0 +1,144 @@
+# ✅ Gestraf_base.architecture.txt (Keycloak OIDC)
+# Purpose: Define the backend architecture structure used in the 'controlmat' project based on the Gestraf solution.
+# Use this file to guide the GPT agent in generating consistent, modular backend logic aligned with this architecture.
+# Authentication: Keycloak OIDC (no local login endpoints)
+
+📁 Project Root: controlmat/
+└── src/
+    ├── controlmat.Api/              # API layer: Controllers, Program.cs, DI, Swagger
+    ├── controlmat.Application/      # CQRS layer: Commands, Queries, DTOs, Validators, MediatR handlers
+    ├── controlmat.Domain/           # Pure domain layer: Entities, Enums, Interfaces (no EF Core)
+    └── controlmat.Infrastructure/   # Persistence layer: DbContext, EF Core, Repositories, integrations
+
+----------------------------------------
+🧱 API Layer (controlmat.Api)
+----------------------------------------
+- Controllers go here, thin and focused on routing and delegation.
+- Inject IMediator for command handling.
+- Directly inject queries for reads (e.g., IUserQueries).
+- All controllers use [Authorize(Roles = "WarehouseUser")] for Keycloak role-based access.
+- NO login endpoints - authentication is handled by Keycloak OIDC redirect.
+- Swagger configured with JWT Bearer security for testing.
+- All DI setup is centralized in DependencyInjection.cs
+- Program.cs should call:
+    builder.Services.AddApplicationServices();
+    builder.Services.AddInfrastructureServices(builder.Configuration);
+    builder.Services.AddWebServices();
+
+----------------------------------------
+🧠 Application Layer (controlmat.Application)
+----------------------------------------
+- Organized by CQRS pattern:
+  • Commands: controlmat.Application.Common.Commands.{Feature}
+  • Queries:  controlmat.Application.Common.Queries.{Feature}
+  • DTOs:     controlmat.Application.Common.Dto
+  • Validators: FluentValidation validators per DTO (NO credential validation)
+- Use MediatR for command/query dispatching.
+- Commands/Queries may be structured as nested static classes with Request/Handler.
+- Business logic must be isolated in Handlers, not in controllers.
+- Handlers can access JWT claims via IHttpContextAccessor for user context.
+- User identity comes from HttpContext.User.FindFirst("preferred_username") etc.
+
+----------------------------------------
+🏛️ Domain Layer (controlmat.Domain)
+----------------------------------------
+- Holds domain models, value objects, enums, and interfaces.
+- No service or EF Core logic.
+- No authentication/authorization logic - pure business domain.
+- Example: User.cs, Material.cs, IAssignmentRepository.cs
+
+----------------------------------------
+🗄️ Infrastructure Layer (controlmat.Infrastructure)
+----------------------------------------
+- EF Core DbContext: ControlmatDbContext.cs
+- Repository implementations for domain interfaces
+- Persistence logic and external services
+- NO authentication services - auth is external via Keycloak
+- Register all services via AddInfrastructureServices()
+
+----------------------------------------
+🔧 Technologies Used
+----------------------------------------
+- EF Core for persistence
+- MediatR for CQRS
+- FluentValidation for input validation (NO password validation)
+- AutoMapper for DTO <-> Entity mapping (optional)
+- NSwag via AddOpenApiDocument for Swagger
+- Serilog-based logging via ConfigureLogger() in host builder
+- Microsoft.AspNetCore.Authentication.JwtBearer for Keycloak token validation
+- Microsoft.AspNetCore.Authorization for role-based access control
+
+----------------------------------------
+🔐 Authentication & Authorization (Keycloak OIDC)
+----------------------------------------
+- Authentication: JWT Bearer tokens from Keycloak realm
+- Authorization: Role-based using [Authorize(Roles = "WarehouseUser")]
+- No local credential storage or validation
+- No password hashing or JWT issuing in this API
+- User context available in handlers via HttpContext.User claims
+- Claims mapping:
+  • preferred_username → User identity
+  • realm_access.roles → ASP.NET Core roles
+  • sub → Keycloak user ID (optional)
+
+----------------------------------------
+📌 Example Command Structure (with User Context)
+----------------------------------------
+public static class CreateUserCommand
+{
+    public class Request : IRequest<UserDto> { ... }
+    
+    public class Handler : IRequestHandler<Request, UserDto> 
+    { 
+        private readonly IHttpContextAccessor _httpContext;
+        
+        public Handler(IHttpContextAccessor httpContext) => _httpContext = httpContext;
+        
+        public async Task<UserDto> Handle(Request request, CancellationToken ct)
+        {
+            var currentUser = _httpContext.HttpContext?.User?.FindFirst("preferred_username")?.Value;
+            // Business logic here...
+        }
+    }
+}
+
+----------------------------------------
+📌 Example Query Structure
+----------------------------------------
+public static class GetUsersQuery
+{
+    public class Request : IRequest<IEnumerable<UserDto>> { ... }
+    public class Handler : IRequestHandler<Request, IEnumerable<UserDto>> { ... }
+}
+
+----------------------------------------
+📌 Controller Structure (Keycloak Protected)
+----------------------------------------
+[ApiController]
+[Route("api/[controller]")]
+[Authorize(Roles = "WarehouseUser")] // Keycloak role requirement
+public class ExampleController : ControllerBase
+{
+    private readonly IMediator _mediator;
+    
+    public ExampleController(IMediator mediator) => _mediator = mediator;
+    
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] ExampleDto dto)
+        => Ok(await _mediator.Send(new CreateExampleCommand.Request { Dto = dto }));
+}
+
+----------------------------------------
+✅ Agent Instructions
+----------------------------------------
+When generating backend features for controlmat:
+- Respect Gestraf's layered project layout and CQRS patterns
+- Use thin controllers with MediatR/Query injection
+- All controllers protected with [Authorize(Roles = "WarehouseUser")]
+- NO authentication endpoints - delegate to Keycloak
+- Organize files per feature into Commands, Queries, DTOs, Validators
+- Use DependencyInjection.cs for all service registrations
+- Keep Domain and Infrastructure clearly separated
+- Access user context via IHttpContextAccessor in handlers when needed
+- Configure JWT Bearer authentication pointing to Keycloak Authority
+- Ensure CORS is configured for frontend integration

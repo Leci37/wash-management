@@ -1,0 +1,101 @@
+SUMISAN – Final Database Structure (Live‑Verified)
+Source of truth: SQL Server SUMISAN database (schema dump provided by user).
+Auth is Keycloak OIDC; local tables are not used for credential validation.
+
+1) USERS
+Purpose: Business reference for operators (not authentication).
+
+Column	Type	Null	Key	Identity
+UserId	int	NO	PK	YES
+UserName	varchar(100)	NO		NO
+
+Notes: No Role/Password columns. Handlers map Keycloak claims to local users if needed.
+
+2) MACHINES
+Purpose: Wash machines catalog.
+
+Column	Type	Null	Key	Identity
+Id	smallint	NO	PK	NO
+Name	varchar(50)	NO		NO
+
+Notes: Business rule allows 2 logical machines (not enforced by DB).
+
+3) WASHINGS
+Purpose: Wash cycle header.
+
+Column	Type	Null	Key	Identity
+WashingId	bigint	NO	PK	NO
+MachineId	smallint	NO	FK→ MACHINES(Id)	NO
+StartUserId	int	NO	FK→ USERS(UserId)	NO
+EndUserId	int	YES	FK→ USERS(UserId)	NO
+StartDate	datetime	NO		NO
+EndDate	datetime	YES		NO
+Status	char(1)	NO		NO
+StartObservation	varchar(100)	YES		NO
+FinishObservation	varchar(100)	YES		NO
+
+Business meanings:
+Status: ‘P’ (in progress) / ‘F’ (finished). WashingId uses YYMMDDXX sequence (enforced in handlers).
+
+FKs:
+
+FK__WASHINGS__Machin__3B75D760 → MACHINES(Id)
+
+FK__WASHINGS__StartU__3C69FB99 → USERS(UserId)
+
+FK__WASHINGS__EndUse__3D5E1FD2 → USERS(UserId)
+
+4) PROTS
+Purpose: Instrument kits scanned for a wash.
+
+Column	Type	Null	Key	Identity
+Id	int	NO	PK	YES
+WashingId	bigint	NO	FK→ WASHINGS(WashingId)	NO
+ProtId	varchar(7)	NO		NO
+BatchNumber	varchar(4)	NO		NO
+BagNumber	varchar(5)	NO		NO
+
+FK: FK__PROTS__WashingId__412EB0B6 → WASHINGS(WashingId)
+
+Formats (validated in app):
+ProtId = PROT###, BatchNumber = NL##, BagNumber = ##/##.
+
+5) PHOTOS
+Purpose: Evidence photos for a wash.
+
+Column	Type	Null	Key	Identity
+Id	int	NO	PK	YES
+WashingId	bigint	NO	FK→ WASHINGS(WashingId)	NO
+FileName	varchar(255)	NO		NO
+FilePath	varchar(255)	NO		NO
+CreatedAt	datetime	NO		NO
+
+FK: FK__PHOTOS__WashingI__440B1D61 → WASHINGS(WashingId)
+
+Notes: CreatedAt exists in DB (use it for auditing). Naming {WashingId}_{XX}.jpg and max‑99 photos are enforced in handlers.
+
+6) PARAMETERS
+Purpose: Simple configuration store.
+
+Column	Type	Null	Key	Identity
+Id	int	NO	PK	YES
+Name	varchar(50)	NO		NO
+Value	varchar(255)	NO		NO
+
+Typical key: ImagePath → base folder for photos.
+
+Entity Relationships (Summary)
+WASHINGS — M:1 → MACHINES (MachineId)
+
+WASHINGS — M:1 → USERS (StartUserId, EndUserId)
+
+PROTS — M:1 → WASHINGS (WashingId)
+
+PHOTOS — M:1 → WASHINGS (WashingId)
+
+Differences vs previous spec
+Removed optional PasswordHash/Role from USERS (not in DB).
+
+Added PHOTOS.CreatedAt (present in DB but missing in old spec).
+
+Clarified identity columns: USERS.UserId, PARAMETERS.Id, PHOTOS.Id, PROTS.Id are identity; MACHINES.Id and WASHINGS.WashingId are not identity (by design).

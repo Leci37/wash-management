@@ -1,0 +1,8 @@
+🔍 WHAT’S MISSING or RECOMMENDED TO ADD
+Missing Item	Why it Matters	Recommendation
+⚠️ DTO definitions file	While DTOs are described across multiple files, there’s no single source of truth for them	Create wash-dtos-spec.txt listing all request/response DTOs clearly
+⚠️ Validation rules summary	FluentValidation rules exist but aren’t centralized	Create wash-validation-rules.txt listing rules per DTO (e.g. required fields, max lengths, etc.)
+⚠️ Authorization matrix	Not explicitly documented who can access what (e.g. if Admin roles are added later)	Create a short wash-auth-policy.txt defining [Authorize(Roles=...)] for each endpoint
+⚠️ Error handling / response codes	Expected errors (e.g. 400 for max active washes, 401 for login fail) are not fully listed	Add a wash-error-codes.txt documenting HTTP codes per endpoint (optional but useful)
+⚠️ Deployment/config guide	Not included yet (e.g. how to configure ImagePath, JWT keys, DbContext)	Optional wash-deployment-config.txt or inline notes in Program.cs
+🟡 ERD diagram (visual)	Helpful for DB devs or external reviewers, not mandatory	Optional: Use a tool to export based on schema, or request one here

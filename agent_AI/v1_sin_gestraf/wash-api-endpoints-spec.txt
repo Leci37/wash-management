@@ -1,0 +1,11 @@
+Feel free to now ask:
+
+Questions about any API endpoint’s behavior
+
+Clarifications on DB structure or constraints
+
+Suggestions for modifications or optimizations
+
+Or if you want to start generating actual code
+
+Just let me know what you’d like to do next.

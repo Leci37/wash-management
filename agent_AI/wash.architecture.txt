@@ -1,0 +1,219 @@
+# 🧠 Gestraf-Aligned Backend Architecture for SUMISAN
+
+This document defines the backend architecture for the **SUMISAN Wash Management System** using the **Gestraf-based CQRS architecture**.
+
+---
+
+## ✅ Project Structure
+
+```
+controlmat/
+└── src/
+    ├── controlmat.Api/              # API layer: Controllers, DI, Swagger
+    ├── controlmat.Application/      # CQRS layer: Commands, Queries, DTOs, Validators
+    ├── controlmat.Domain/           # Pure domain layer: Entities, Interfaces
+    └── controlmat.Infrastructure/   # EF Core, Repositories, Config
+```
+
+---
+
+## 🧱 API Layer: controlmat.Api
+
+* Thin controllers using `IMediator` to send `Command`/`Query` requests.
+* Swagger via `AddOpenApiDocument()`.
+* All dependencies registered via `DependencyInjection.cs`.
+
+```csharp
+[ApiController]
+[Route("api/washing")]
+public class WashingController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public WashingController(IMediator mediator) => _mediator = mediator;
+
+    [HttpPost]
+    public async Task<IActionResult> Start([FromBody] NewWashDTO dto)
+        => Ok(await _mediator.Send(new StartWashCommand.Request(dto)));
+
+    [HttpPut("{id}/finish")]
+    public async Task<IActionResult> Finish(long id, [FromBody] FinishWashDTO dto)
+        => Ok(await _mediator.Send(new FinishWashCommand.Request(id, dto)));
+}
+```
+
+---
+
+## 🧠 Application Layer: controlmat.Application
+
+### Folder Structure:
+
+```
+Common/
+├── Commands/
+│   ├── StartWashCommand.cs
+│   └── FinishWashCommand.cs
+├── Queries/
+│   └── GetActiveWashesQuery.cs
+├── Dto/
+│   └── NewWashDTO.cs, FinishWashDTO.cs, etc.
+├── Validators/
+│   └── NewWashValidator.cs, FinishWashValidator.cs
+```
+
+### Example Command:
+
+```csharp
+public static class StartWashCommand
+{
+    public class Request : IRequest<WashDto> { public NewWashDTO Dto { get; set; } }
+
+    public class Handler : IRequestHandler<Request, WashDto>
+    {
+        private readonly IWashRepository _repo;
+        private readonly IDateTimeProvider _clock;
+        private readonly ILogger<Handler> _logger;
+
+        public async Task<WashDto> Handle(Request request, CancellationToken ct)
+        {
+            var wash = Washing.Create(...); // Apply business rules
+            await _repo.AddAsync(wash);
+            return new WashDto(...);
+        }
+    }
+}
+```
+
+* All **business rules** (e.g. max 2 active washes, at least 1 photo to finish) live inside Handlers.
+* FluentValidation is applied via validators on `DTO`s.
+
+---
+
+## 🏛 Domain Layer: controlmat.Domain
+
+* Contains:
+
+  * Entities: `Washing`, `Prot`, `Photo`, `User`, `Machine`
+  * Enums: `WashStatus`
+  * Interfaces: `IWashingRepository`, `IPhotoRepository`
+
+✅ **No EF Core logic** here.
+
+```csharp
+public interface IWashingRepository
+{
+    Task AddAsync(Washing wash);
+    Task<int> CountActiveAsync();
+    Task<bool> IsMachineInUseAsync(int machineId);
+    Task<Washing?> GetByIdAsync(long id);
+}
+```
+
+---
+
+## 🗄 Infrastructure Layer: controlmat.Infrastructure
+
+* Implements domain interfaces with EF Core.
+* Holds `ControlmatDbContext`.
+* Reads configuration for photo path.
+
+```csharp
+public class WashingRepository : IWashingRepository
+{
+    private readonly ControlmatDbContext _context;
+
+    public async Task<int> CountActiveAsync()
+        => await _context.Washings.CountAsync(w => w.Status == 'P');
+}
+```
+
+---
+
+## ✅ Command/Query Use Cases
+
+### Start Wash
+
+* `StartWashCommand`
+
+  * Validates: max 2 active washes, machine availability, ≥1 prot
+  * Creates `Washing` + `Prot[]`
+
+### Finish Wash
+
+* `FinishWashCommand`
+
+  * Validates: wash in progress, ≥1 photo, user exists
+  * Updates wash with `EndDate`, `Status = F`
+
+### Upload Photo
+
+* `UploadPhotoCommand`
+
+  * Stores JPEG under `/photos/{year}/{WashingId}_{XX}.jpg`
+  * Adds `Photo` entity
+  * Enforces max 99 photos
+
+### Add Prot
+
+* `AddProtCommand`
+
+  * Ensures wash is still active
+  * Adds new `Prot`
+
+### Get Active Washes
+
+* `GetActiveWashesQuery`
+
+  * Returns all washes with `Status = 'P'`
+
+---
+
+## ✅ Logging
+
+Handlers log:
+
+* Start/End of execution
+* Input DTOs
+* Output results
+* Exceptions or validation errors
+
+Uses Serilog via `ILogger<THandler>` injected per-handler.
+
+---
+
+## ✅ Validation Rules (FluentValidation)
+
+* Applied in `Application.Common.Validators`
+* Automatically invoked via `services.AddValidatorsFromAssemblyContaining<T>()`
+
+---
+
+## ✅ Dependency Injection
+
+Configured via extension methods:
+
+```csharp
+public static class DependencyInjection
+{
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+    {
+        services.AddMediatR(typeof(StartWashCommand).Assembly);
+        services.AddValidatorsFromAssemblyContaining<NewWashValidator>();
+        return services;
+    }
+}
+```
+
+---
+
+## ✅ Summary
+
+| Element          | Old Model          | Gestraf-Aligned                            |
+| ---------------- | ------------------ | ------------------------------------------ |
+| Service Classes  | WashService        | `StartWashCommand.Handler`                 |
+| Controller Logic | Direct service     | `IMediator.Send(...)`                      |
+| Business Logic   | Service methods    | Handlers only                              |
+| Validation       | FluentValidation   | Same, but relocated                        |
+| Repositories     | EF Core in Service | Interfaces in Domain, implemented in Infra |
+
+The system is now fully **CQRS-aligned**, modular, and testable — ready for enterprise-scale extension and maintainability.

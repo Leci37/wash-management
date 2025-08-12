@@ -5,7 +5,7 @@ A **warehouse web application** for managing the cleaning cycles of surgical ins
 ## 🏗️ Architecture
 
 This project follows the **Gestraf CQRS architecture** with:
-- **.NET 6 Web API** backend with MediatR, EF Core, JWT authentication
+- **.NET 6 Web API** backend with MediatR, EF Core, Keycloak authentication
 - **Angular 16+** frontend with Signals, Guards, and modern patterns
 - **SQL Server 2022** database (Docker containerized)
 
@@ -42,7 +42,7 @@ docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Sumisan2024!" -p 1434:1433 -
 ```
 sumisan-wash-management/
 ├── backend/              # .NET 6 CQRS API
-│   ├── controlmat.Api/           # Controllers, JWT, Swagger
+│   ├── controlmat.Api/           # Controllers, Keycloak JWT, Swagger
 │   ├── controlmat.Application/   # Commands, Queries, DTOs
 │   ├── controlmat.Domain/        # Entities, Interfaces
 │   └── controlmat.Infrastructure/# EF Core, Repositories
@@ -56,7 +56,7 @@ sumisan-wash-management/
 
 ## 🔧 Core Features
 
-- **🔐 JWT Authentication** - Secure login for warehouse users
+- **🔐 Keycloak OIDC Authentication** - Warehouse users sign in via Keycloak and call the API with Bearer tokens
 - **🚿 Start Wash Cycles** - QR scanning or manual PROT entry
 - **📸 Photo Documentation** - Upload evidence images per wash
 - **✅ Finish Wash Cycles** - Complete with validation and photos
@@ -68,7 +68,7 @@ sumisan-wash-management/
 - [x] Architecture documentation complete
 - [x] Frontend UI/UX implemented  
 - [ ] **CQRS Handlers implementation** *(in progress)*
-- [ ] **JWT Authentication pipeline** *(in progress)*
+- [ ] **Keycloak authentication pipeline** *(in progress)*
 - [ ] **Photo upload system** *(in progress)*
 - [ ] Database migrations
 - [ ] Integration testing

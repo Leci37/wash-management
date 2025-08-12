@@ -88,7 +88,7 @@ export class Shell implements OnInit, OnDestroy {
     return `${path}`;
   }
   private adminProfileChanges() {
-    //FIXME cambiar cuando se implemente el login y auth
+    // Keycloak roles drive available navigation links
     this.subs.add(
       this.perfilStore.perfil$.subscribe((perfil) => {
         if (perfil === Profiles.Admin) {

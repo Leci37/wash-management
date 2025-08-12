@@ -55,7 +55,7 @@ controlmat/
 ## 🔧 Core Functional Requirements You Must Support
 
 **Authentication**
-Users authenticate via Keycloak OIDC and must supply a Bearer token on every request.
+Users authenticate via Keycloak OIDC and must present a Bearer token for protected routes.
 
 **Start Wash Flow**
 - POST `/api/washing`  

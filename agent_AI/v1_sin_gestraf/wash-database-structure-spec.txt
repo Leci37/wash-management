@@ -1,0 +1,102 @@
+✅ FINAL DATABASE STRUCTURE REVIEW
+🔹 1. USERS TABLE
+Column	Type	Constraint
+UserId	int	Primary Key
+UserName	varchar(100)	Required
+(optional)	Role	varchar(50)
+
+Notes:
+
+Referenced by Washing.StartUserId and Washing.EndUserId
+
+🔹 2. MACHINES TABLE
+Column	Type	Constraint
+Id	smallint	Primary Key
+Name	varchar(50)	Required
+
+Notes:
+
+2 rows max (Machine 1 and Machine 2)
+
+Referenced by Washing.MachineId
+
+🔹 3. WASHINGS TABLE
+Column	Type	Constraint
+WashingId	bigint	Primary Key (Format: YYMMDDXX)
+MachineId	smallint	FK → Machines.Id
+StartUserId	int	FK → Users.UserId
+EndUserId	int?	FK → Users.UserId, nullable
+StartDate	datetime	Required
+EndDate	datetime?	Optional
+Status	char(1)	Required — values: 'P' (progress), 'F' (finished)
+StartObservation	varchar(100)	Optional
+FinishObservation	varchar(100)	Optional
+
+Relationships:
+
+1 Machine → many Washings
+
+1 User → many Started Washings
+
+1 User → many Finished Washings
+
+1 Washing → many Prots
+
+1 Washing → many Photos
+
+Business Rules:
+
+Max 2 active washes (Status = P) at a time
+
+Must have ≥1 Prot to start
+
+Must have ≥1 Photo to finish
+
+🔹 4. PROTS TABLE
+Column	Type	Constraint
+Id	int	Primary Key
+WashingId	bigint	FK → Washings.WashingId
+ProtId	varchar(7)	Format PROTXXX
+BatchNumber	varchar(4)	Format NLXX
+BagNumber	varchar(5)	Format XX/XX (e.g. 01/02)
+
+Notes:
+
+At least one prot is mandatory to start a wash
+
+Unlimited prots per wash allowed
+
+🔹 5. PHOTOS TABLE
+Column	Type	Constraint
+Id	int	Primary Key
+WashingId	bigint	FK → Washings.WashingId
+FileName	varchar(255)	Format {WashingId}_{XX}.jpg
+FilePath	varchar(255)	Full or relative path
+
+Rules:
+
+Photos stored in: {ImagePath}/{Year}/{WashingId}_{XX}.jpg
+
+Must have at least 1 photo to finalize wash
+
+Max 99 photos per wash allowed
+
+🔹 6. PARAMETERS TABLE
+Column	Type	Constraint
+Id	int	Primary Key
+Name	varchar(50)	Required
+Value	varchar(255)	Required
+
+Used For:
+
+ImagePath: e.g., /shared/photos
+
+Can be extended to support more config values later
+
+✅ ENTITY RELATIONSHIP TABLE
+Source Table	FK Column	Target Table	Relationship
+Washing	MachineId	Machine	Many-to-One
+Washing	StartUserId	User	Many-to-One
+Washing	EndUserId	User	Many-to-One
+Prot	WashingId	Washing	Many-to-One
+Photo	WashingId	Washing	Many-to-One

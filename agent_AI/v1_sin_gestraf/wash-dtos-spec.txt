@@ -1,0 +1,92 @@
+✅ DTO DEFINITIONS
+🚿 NewWashDTO
+Used to start a new wash.
+
+json
+Copiar
+Editar
+{
+  "machineId": 1,
+  "startUserId": 1,
+  "startObservation": "string (optional)",
+  "protEntries": [
+    {
+      "protId": "PROT001",
+      "batchNumber": "NL01",
+      "bagNumber": "01/02"
+    }
+  ]
+}
+✅ Business Rules:
+
+At least one protEntry is required
+
+Machine must not be in use
+
+Max 2 active washes
+
+🧺 FinishWashDTO
+Used to finish a wash.
+
+json
+Copiar
+Editar
+{
+  "endUserId": 2,
+  "finishObservation": "string (optional)"
+}
+✅ Business Rules:
+
+Must have at least 1 photo uploaded before calling this
+
+Wash must be in progress
+
+📦 AddProtDTO
+Used to add a prot to an active wash.
+
+json
+Copiar
+Editar
+{
+  "washingId": 25080601,
+  "protId": "PROT002",
+  "batchNumber": "NL02",
+  "bagNumber": "01/03"
+}
+✅ Business Rules:
+
+Wash must be active
+
+No upper limit on prot entries
+
+🖼️ PhotoUploadDTO (optional if using multipart form-data)
+Used if uploading images via a metadata approach.
+
+json
+Copiar
+Editar
+{
+  "file": "binary",
+  "description": "optional string"
+}
+✅ Actual upload is handled using multipart/form-data
+✅ File naming convention: {WashingId}_{XX}.jpg
+✅ Stored at: {ImagePath}/{Year}/...
+
+🔍 WashingResponseDTO (example for GET endpoints or confirmation views)
+json
+Copiar
+Editar
+{
+  "washingId": 25080601,
+  "machineId": 1,
+  "startUserId": 1,
+  "endUserId": 2,
+  "startDate": "2025-08-06T10:23:00",
+  "endDate": "2025-08-06T11:45:00",
+  "status": "F",
+  "startObservation": "Initial check OK",
+  "finishObservation": "All clean",
+  "prots": [ ... ],
+  "photos": [ ... ]
+}
