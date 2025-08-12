@@ -1,0 +1,186 @@
+# ✅ Gestraf-Aligned Validation Rules – SUMISAN Wash Management (Keycloak Auth)
+
+This file maps each DTO to its corresponding **FluentValidation validator** in the `Application.Common.Validators` namespace. These rules ensure that all incoming data is sanitized before it reaches the command/query handlers.
+
+**⚠️ Important**: There are **NO authentication validators** since authentication is handled by Keycloak OIDC. All validators focus on business data only.
+
+All validators are registered via:
+
+```csharp
+services.AddValidatorsFromAssemblyContaining<NewWashValidator>();
+```
+
+---
+
+## 🚿 NewWashDtoValidator
+
+* `MachineId`: Required, must be 1 or 2
+* `StartUserId`: Required (correlates to local Users table)
+* `ProtEntries`: Required, count ≥ 1
+* `StartObservation`: Optional, max length 100
+
+```csharp
+public class NewWashDtoValidator : AbstractValidator<NewWashDto>
+{
+    public NewWashDtoValidator()
+    {
+        RuleFor(x => x.MachineId)
+            .NotEmpty()
+            .InclusiveBetween(1, 2)
+            .WithMessage("MachineId must be 1 or 2");
+            
+        RuleFor(x => x.StartUserId)
+            .NotEmpty()
+            .WithMessage("StartUserId is required");
+            
+        RuleFor(x => x.ProtEntries)
+            .NotEmpty()
+            .WithMessage("At least one PROT entry is required");
+            
+        RuleFor(x => x.StartObservation)
+            .MaximumLength(100)
+            .WithMessage("StartObservation cannot exceed 100 characters");
+    }
+}
+```
+
+---
+
+## 📦 AddProtDtoValidator
+
+* `WashingId`: Required
+* `ProtId`: Required, regex `^PROT[0-9]{3}$`
+* `BatchNumber`: Required, regex `^NL[0-9]{2}$`
+* `BagNumber`: Required, regex `^[0-9]{2}/[0-9]{2}$`
+
+```csharp
+public class AddProtDtoValidator : AbstractValidator<AddProtDto>
+{
+    public AddProtDtoValidator()
+    {
+        RuleFor(x => x.WashingId)
+            .NotEmpty()
+            .WithMessage("WashingId is required");
+            
+        RuleFor(x => x.ProtId)
+            .NotEmpty()
+            .Matches(@"^PROT[0-9]{3}$")
+            .WithMessage("ProtId must follow format PROTXXX (e.g., PROT001)");
+            
+        RuleFor(x => x.BatchNumber)
+            .NotEmpty()
+            .Matches(@"^NL[0-9]{2}$")
+            .WithMessage("BatchNumber must follow format NLXX (e.g., NL01)");
+            
+        RuleFor(x => x.BagNumber)
+            .NotEmpty()
+            .Matches(@"^[0-9]{2}/[0-9]{2}$")
+            .WithMessage("BagNumber must follow format XX/XX (e.g., 01/02)");
+    }
+}
+```
+
+---
+
+## 🧺 FinishWashDtoValidator
+
+* `EndUserId`: Required (correlates to local Users table)
+* `FinishObservation`: Optional, max length 100
+
+```csharp
+public class FinishWashDtoValidator : AbstractValidator<FinishWashDto>
+{
+    public FinishWashDtoValidator()
+    {
+        RuleFor(x => x.EndUserId)
+            .NotEmpty()
+            .WithMessage("EndUserId is required");
+            
+        RuleFor(x => x.FinishObservation)
+            .MaximumLength(100)
+            .WithMessage("FinishObservation cannot exceed 100 characters");
+    }
+}
+```
+
+---
+
+## 🖼️ PhotoUploadDtoValidator
+
+* `File`: Required, type JPEG or PNG (content-type check)
+* File count ≤ 99 per wash (validated in `UploadPhotoCommand.Handler`)
+* Max file size ≤ 5MB (enforced via server config or file upload limit)
+
+```csharp
+public class PhotoUploadDtoValidator : AbstractValidator<PhotoUploadDto>
+{
+    private static readonly string[] AllowedContentTypes = { "image/jpeg", "image/jpg", "image/png" };
+    
+    public PhotoUploadDtoValidator()
+    {
+        RuleFor(x => x.File)
+            .NotNull()
+            .WithMessage("File is required");
+            
+        RuleFor(x => x.File.ContentType)
+            .Must(contentType => AllowedContentTypes.Contains(contentType?.ToLower()))
+            .WithMessage("File must be JPEG or PNG format")
+            .When(x => x.File != null);
+            
+        RuleFor(x => x.File.Length)
+            .LessThanOrEqualTo(5 * 1024 * 1024) // 5MB
+            .WithMessage("File size cannot exceed 5MB")
+            .When(x => x.File != null);
+            
+        RuleFor(x => x.Description)
+            .MaximumLength(200)
+            .WithMessage("Description cannot exceed 200 characters");
+    }
+}
+```
+
+---
+
+## ⚠️ What's Handled in Handlers (Not FluentValidation)
+
+| Rule                              | Enforced In                  | Notes                                    |
+| --------------------------------- | ---------------------------- | ---------------------------------------- |
+| Max 2 active washes               | `StartWashCommand.Handler`   | Business rule, not field validation     |
+| Machine not already in use        | `StartWashCommand.Handler`   | Requires database check                  |
+| ≥1 photo to finish                | `FinishWashCommand.Handler`  | Business rule validation                 |
+| Prevent prot add to finished wash | `AddProtCommand.Handler`     | State-based business rule                |
+| Enforce photo naming sequence     | `UploadPhotoCommand.Handler` | File system and naming logic             |
+| User exists in local Users table | Various Handlers             | Database correlation check               |
+| JWT token validation              | JWT Bearer Middleware        | Handled by ASP.NET Core + Keycloak      |
+| Role authorization                | Authorization Middleware     | `[Authorize(Roles = "WarehouseUser")]`  |
+
+---
+
+## ➕ What Could Be Added (Optional)
+
+* ✅ Duplicate `ProtId` check in `ProtEntries[]` within a single wash
+* ✅ Enforce unique `BagNumber` per wash cycle
+* ✅ Cross-field validation (e.g. `BagNumber` only valid if `BatchNumber` matches specific patterns)
+* ✅ Custom validators for business-specific rules (e.g., valid machine/user combinations)
+
+---
+
+## 🚫 What is NOT Validated Here
+
+* **Username/Password**: No local credentials - handled by Keycloak
+* **JWT tokens**: Validated by ASP.NET Core JWT Bearer middleware
+* **User roles**: Enforced by `[Authorize]` attributes and policies
+* **Session management**: Handled by Keycloak token lifecycle
+* **Authentication state**: External to this API
+
+---
+
+## ✅ Summary
+
+FluentValidation in this Keycloak-integrated system is used **exclusively** for business data validation:
+- Field format validation (regex patterns)
+- Length constraints
+- Required field checks
+- File type and size validation
+
+All authentication and authorization concerns are delegated to Keycloak and ASP.NET Core middleware, keeping validators focused purely on business rules and data integrity.

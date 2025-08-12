@@ -1,0 +1,129 @@
+# ✅ Gestraf-Aligned Error Codes – SUMISAN Wash Management (Keycloak Auth)
+
+This document maps each API endpoint and error code to its corresponding **CQRS command or query handler**.
+
+All business rule validations and exceptions are handled within **Handlers** (not controllers), and return consistent HTTP codes using middleware or controller-level result mapping.
+
+**Authentication is handled by Keycloak OIDC - no local credential validation.**
+
+---
+
+## 🔐 Authentication & Authorization Errors
+
+### Global Auth/Authz Errors (Middleware Level)
+* `401 Unauthorized` → Missing, expired, or invalid JWT token from Keycloak
+* `403 Forbidden` → Valid token but insufficient role (not `WarehouseUser`)
+* `500 Internal Server Error` → Unexpected exception (handled via middleware + Serilog)
+
+**Note**: There are **no local login endpoints** in this API. All authentication is delegated to Keycloak.
+
+---
+
+## 🚿 Start Wash
+
+### `POST /api/washing`
+
+* **Handler:** `StartWashCommand`
+* **Auth:** Requires `WarehouseUser` role
+* **Errors:**
+  * `400 Bad Request` → Missing `MachineId`, `StartUserId`, or empty `ProtEntries[]` (FluentValidation)
+  * `401 Unauthorized` → Missing/invalid Keycloak JWT
+  * `403 Forbidden` → Valid JWT but missing `WarehouseUser` role
+  * `409 Conflict` →
+    * Max 2 active washes (enforced via `IWashingRepository.CountActiveAsync()`)
+    * Selected machine already in use (via `IWashingRepository.IsMachineInUseAsync()`)
+
+---
+
+## 🧺 Finish Wash
+
+### `PUT /api/washing/{id}/finish`
+
+* **Handler:** `FinishWashCommand`
+* **Auth:** Requires `WarehouseUser` role
+* **Errors:**
+  * `400 Bad Request` → DTO validation failure (missing `EndUserId`)
+  * `401 Unauthorized` → Missing/invalid Keycloak JWT
+  * `403 Forbidden` → 
+    * Valid JWT but missing `WarehouseUser` role, OR
+    * No photos uploaded for this wash (checked via `IPhotoRepository.GetByWashId()`)
+  * `404 Not Found` → Wash does not exist (null from `IWashingRepository.GetByIdAsync()`)
+  * `409 Conflict` → Wash is already finished (Status = 'F')
+
+---
+
+## 📦 Add Prot
+
+### `POST /api/washing/{id}/prots`
+
+* **Handler:** `AddProtCommand`
+* **Auth:** Requires `WarehouseUser` role
+* **Errors:**
+  * `400 Bad Request` → Invalid prot format (validator-level: regex patterns for ProtId, BatchNumber, BagNumber)
+  * `401 Unauthorized` → Missing/invalid Keycloak JWT
+  * `403 Forbidden` → Valid JWT but missing `WarehouseUser` role
+  * `404 Not Found` → Wash not found (repository returns null)
+  * `409 Conflict` → Wash is already finished (Status = 'F')
+
+---
+
+## 🖼 Upload Photo
+
+### `POST /api/washing/{id}/photos`
+
+* **Handler:** `UploadPhotoCommand`
+* **Auth:** Requires `WarehouseUser` role
+* **Errors:**
+  * `400 Bad Request` → No file provided or unsupported format (handler or `PhotoUploadValidator`)
+  * `401 Unauthorized` → Missing/invalid Keycloak JWT
+  * `403 Forbidden` → Valid JWT but missing `WarehouseUser` role
+  * `404 Not Found` → Wash not found
+  * `409 Conflict` → Already reached 99 photos (business rule)
+  * `413 Payload Too Large` → File exceeds size limit (enforced via request limit config)
+
+---
+
+## 🔍 Get Active Washes
+
+### `GET /api/washing/active`
+
+* **Handler:** `GetActiveWashesQuery`
+* **Auth:** May be `[AllowAnonymous]` or require `WarehouseUser` role
+* **Errors:**
+  * `200 OK` → Always returns 0–2 items (no business failure cases)
+  * `401 Unauthorized` → Missing/invalid JWT (if auth required)
+  * `403 Forbidden` → Missing role (if auth required)
+
+---
+
+## 🔍 Get Wash By ID
+
+### `GET /api/washing/{id}`
+
+* **Handler:** `GetWashByIdQuery`
+* **Auth:** Requires `WarehouseUser` role
+* **Errors:**
+  * `200 OK` → Wash found and returned with nested Prots/Photos
+  * `401 Unauthorized` → Missing/invalid Keycloak JWT
+  * `403 Forbidden` → Valid JWT but missing `WarehouseUser` role
+  * `404 Not Found` → ID does not match any existing wash
+
+---
+
+## ✅ Handler-Based Error Principles (Gestraf + Keycloak)
+
+### Separation of Concerns:
+* **Authentication**: Handled by ASP.NET Core JWT Bearer middleware + Keycloak token validation
+* **Authorization**: Handled by `[Authorize(Roles = "WarehouseUser")]` attributes on controllers
+* **Input Validation**: Enforced via FluentValidation in `Application.Common.Validators`
+* **Business Rules**: Checked inside Command/Query handlers (e.g., max washes, photo count)
+* **Error Mapping**: NotFound/Conflict/Forbidden errors thrown by handlers, mapped via exception middleware
+
+### Key Changes from Local Auth:
+* **No credential validation** in handlers - all auth is external via Keycloak
+* **No password checks** anywhere in the application code
+* **No local JWT issuing** - tokens come from Keycloak realm
+* **User claims** extracted from `HttpContext.User` in handlers as needed
+* **Role mapping** from Keycloak `realm_access.roles` to ASP.NET Core roles
+
+This keeps all error behavior declarative, testable, and in line with Gestraf's CQRS and MediatR-based design while delegating all authentication concerns to Keycloak.

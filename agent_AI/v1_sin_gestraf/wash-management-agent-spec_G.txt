@@ -1,0 +1,105 @@
+
+# ✅ wash-management-agent-spec.txt (Gestraf-style Rebuild)
+# Backend architecture specification for Wash Management in the SUMISAN-Controlmat system.
+# This version aligns to Gestraf architecture using CQRS, MediatR, FluentValidation, and layered modular projects.
+
+📁 Solution Structure (4 Projects)
+----------------------------------------
+- wash.Api/              → Web API entry point (controllers, Program.cs, DI setup)
+- wash.Application/      → Commands, Queries, DTOs, Validators, CQRS handlers
+- wash.Domain/           → Entities, Enums, Interfaces (pure domain logic)
+- wash.Infrastructure/   → EF Core persistence, repositories, external services
+
+----------------------------------------
+🧱 API Layer (wash.Api)
+----------------------------------------
+- Exposes endpoints under `/api/washing`, `/api/auth`, `/api/machine`, etc.
+- Controllers are thin and follow the Mediator pattern:
+    [HttpPost]
+    public async Task<IActionResult> Post([FromBody] StartWashCommand.Request request)
+    {
+        var result = await _mediator.Send(request);
+        return Ok(result);
+    }
+- Queries like `GetActiveWashesQuery` are injected directly via interfaces.
+- All dependency injection is centralized in `DependencyInjection.cs`.
+
+----------------------------------------
+🧠 Application Layer (wash.Application)
+----------------------------------------
+Organized into the following categories:
+
+- 📁 Commands/
+    - `StartWashCommand.cs`
+    - `FinishWashCommand.cs`
+    - `AddProtCommand.cs`
+    - `UploadPhotoCommand.cs`
+
+- 📁 Queries/
+    - `GetActiveWashesQuery.cs`
+    - `GetWashByIdQuery.cs`
+
+- 📁 DTOs/
+    - `NewWashDto.cs`
+    - `FinishWashDto.cs`
+    - `AddProtDto.cs`
+    - `PhotoDto.cs`
+    - `WashingResponseDto.cs`
+
+- 📁 Validators/
+    - Uses FluentValidation to validate input DTOs.
+
+Commands and Queries follow the MediatR style with nested Request and Handler types.
+
+----------------------------------------
+🏛️ Domain Layer (wash.Domain)
+----------------------------------------
+- Contains core entities:
+    - User.cs
+    - Machine.cs
+    - Washing.cs
+    - Prot.cs
+    - Photo.cs
+- Defines enums and interfaces (e.g., IPhotoRepository, IWashingRepository).
+- No EF Core or persistence logic here.
+
+----------------------------------------
+🗄️ Infrastructure Layer (wash.Infrastructure)
+----------------------------------------
+- Contains `WashDbContext` with DbSet<User>, DbSet<Washing>, etc.
+- Repositories like `WashingRepository`, `PhotoRepository`, implementing interfaces from Domain.
+- Handles photo path generation and physical file writing.
+- Registers persistence layer via `AddInfrastructureServices()`.
+
+----------------------------------------
+🚿 Example Feature: StartWash
+----------------------------------------
+- Controller: POST /api/washing
+- DTO: `NewWashDto`
+- Command: `StartWashCommand`
+- Validation: Must contain ≥ 1 prot, valid machineId, and userId.
+- Handler logic:
+    - Check active wash count (≤ 2)
+    - Check machine availability
+    - Generate WashingId (YYMMDDXX format)
+    - Insert Washing and associated Prot records
+    - Return WashingResponseDto
+
+----------------------------------------
+🧩 Core Tech Used
+----------------------------------------
+- .NET 8 (or 6+)
+- MediatR (CQRS messaging)
+- FluentValidation
+- EF Core (SQL Server)
+- NSwag / Swagger for API docs
+- Serilog for logging (with thread ID, DTO input/output)
+
+----------------------------------------
+✅ Rules for Agent
+----------------------------------------
+- Do not use service classes like `WashService`, `AuthService`.
+- Use MediatR commands/queries in `wash.Application`.
+- Controllers only call Mediator or injected query interfaces.
+- Keep validation in FluentValidation classes.
+- Wire everything via `DependencyInjection.cs` and `Program.cs`.
