@@ -1,8 +1,13 @@
-using controlmat.Domain.Entities;
 
-namespace controlmat.Domain.Interfaces;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Controlmat.Domain.Entities;
+
+namespace Controlmat.Domain.Interfaces;
 
 public interface IUserRepository
 {
-    Task<List<User>> GetAllAsync();
+    Task<User?> GetByIdAsync(int userId);
+    Task<IEnumerable<User>> GetAllAsync();
+
 }

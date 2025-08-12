@@ -1,10 +1,21 @@
-using controlmat.Domain.Entities;
 
-namespace controlmat.Domain.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Controlmat.Domain.Entities;
+
+namespace Controlmat.Domain.Interfaces;
+
 
 public interface IWashingRepository
 {
-    Task<List<Washing>> GetActiveWashesAsync();
-    Task<Washing?> GetByIdWithDetailsAsync(long washingId);
-    Task<bool> IsMachineInUseAsync(long machineId);
+    Task<Washing?> GetByIdAsync(long id);
+    Task<Washing?> GetByIdWithDetailsAsync(long id);
+    Task<IEnumerable<Washing>> GetActiveWashesAsync();
+    Task<int> CountActiveAsync();
+    Task<bool> IsMachineInUseAsync(int machineId);
+    Task<long?> GetMaxWashingIdByDateAsync(DateTime date);
+    Task AddAsync(Washing washing);
+    Task UpdateAsync(Washing washing);
+
 }

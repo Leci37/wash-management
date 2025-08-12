@@ -1,9 +1,9 @@
-namespace controlmat.Domain.Entities;
+namespace Controlmat.Domain.Entities;
 
 public class Parameter
 {
     public int Id { get; set; }
-    public string Name { get; set; } = default!;
-    public string Value { get; set; } = default!;
+    public string Name { get; set; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
 }
 
