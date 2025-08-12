@@ -12,6 +12,7 @@ public class ControlmatDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<Photo> Photos => Set<Photo>();
 
     public DbSet<Prot> Prots => Set<Prot>();
 
@@ -22,9 +23,13 @@ public class ControlmatDbContext : DbContext
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());
 
+        modelBuilder.ApplyConfiguration(new PhotoConfiguration());
+
+
         modelBuilder.ApplyConfiguration(new ProtConfiguration());
 
         modelBuilder.ApplyConfiguration(new WashingConfiguration());
+
 
     }
 }
