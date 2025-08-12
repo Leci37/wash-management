@@ -47,7 +47,7 @@ backend/
 
 ### Phase 1: Domain Foundation
 ```csharp
-// controlmat.Domain/Entities/
+// Controlmat.Domain/Entities/
 - User.cs          # UserId, UserName
 - Machine.cs       # Id, Name  
 - Washing.cs       # WashingId, MachineId, UserIds, Status, Dates
@@ -55,7 +55,7 @@ backend/
 - Photo.cs         # WashingId, FileName, FilePath
 - Parameter.cs     # Name, Value (for ImagePath config)
 
-// controlmat.Domain/Interfaces/
+// Controlmat.Domain/Interfaces/
 - IWashingRepository.cs
 - IPhotoRepository.cs  
 - IUserRepository.cs
