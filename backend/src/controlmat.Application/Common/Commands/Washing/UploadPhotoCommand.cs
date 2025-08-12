@@ -75,7 +75,7 @@ public static class UploadPhotoCommand
                     throw new InvalidOperationException($"Washing with ID {washingId} not found");
                 }
 
-                if (washing.Status != "P")
+                if (washing.Status != 'P')
                 {
                     _logger.LogWarning("⚠️ {Function} [Thread:{ThreadId}] - WASHING NOT IN PROGRESS. WashingId: {WashingId}, Status: {Status}",
                         function, threadId, washingId, washing.Status);
