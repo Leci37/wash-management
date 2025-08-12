@@ -17,4 +17,5 @@ public interface IWashingRepository
     Task<long?> GetMaxWashingIdByDateAsync(DateTime date);
     Task AddAsync(Washing washing);
     Task UpdateAsync(Washing washing);
+
 }

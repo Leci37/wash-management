@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Controlmat.Domain.Entities;
@@ -8,4 +9,5 @@ public interface IUserRepository
 {
     Task<User?> GetByIdAsync(int userId);
     Task<IEnumerable<User>> GetAllAsync();
+
 }
