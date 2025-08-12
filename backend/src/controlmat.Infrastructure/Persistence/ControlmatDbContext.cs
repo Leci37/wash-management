@@ -11,15 +11,16 @@ public class ControlmatDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<Machine> Machines => Set<Machine>();
+    public DbSet<Washing> Washings => Set<Washing>();
+    public DbSet<Prot> Prots => Set<Prot>();
+    public DbSet<Photo> Photos => Set<Photo>();
+    public DbSet<Parameter> Parameters => Set<Parameter>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(e => e.UserId);
-            entity.Property(e => e.UserName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Role).IsRequired();
-        });
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ControlmatDbContext).Assembly);
+        base.OnModelCreating(modelBuilder);
     }
 }
 
