@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using controlmat.Domain.Entities;
+using controlmat.Infrastructure.Configurations;
 
 namespace controlmat.Infrastructure.Persistence;
 
@@ -14,12 +15,7 @@ public class ControlmatDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(e => e.UserId);
-            entity.Property(e => e.UserName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Role).IsRequired();
-        });
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
     }
 }
 
