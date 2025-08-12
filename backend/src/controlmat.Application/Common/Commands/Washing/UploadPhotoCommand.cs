@@ -2,11 +2,11 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using controlmat.Domain.Interfaces;
-using controlmat.Domain.Entities;
+using Controlmat.Domain.Interfaces;
+using Controlmat.Domain.Entities;
 using System.Security.Claims;
 
-namespace controlmat.Application.Common.Commands.Washing;
+namespace Controlmat.Application.Common.Commands.Washing;
 
 public static class UploadPhotoCommand
 {

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace controlmat.Application.Common.Dto;
+namespace Controlmat.Application.Common.Dto;
 
 public class NewWashDto
 {

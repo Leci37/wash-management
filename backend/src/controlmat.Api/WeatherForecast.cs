@@ -1,4 +1,4 @@
-namespace controlmat.Api
+namespace Controlmat.Api
 {
     public class WeatherForecast
     {

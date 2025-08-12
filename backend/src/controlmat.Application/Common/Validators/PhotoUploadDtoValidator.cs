@@ -1,8 +1,8 @@
 using System.Linq;
 using FluentValidation;
-using controlmat.Application.Common.Dto;
+using Controlmat.Application.Common.Dto;
 
-namespace controlmat.Application.Common.Validators;
+namespace Controlmat.Application.Common.Validators;
 
 public class PhotoUploadDtoValidator : AbstractValidator<PhotoUploadDto>
 {

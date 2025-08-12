@@ -3,7 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace controlmat.Application;
+namespace Controlmat.Application;
 
 public static class DependencyInjection
 {
