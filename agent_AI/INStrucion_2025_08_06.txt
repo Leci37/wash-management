@@ -29,8 +29,8 @@ Attach photo evidence
 Finalize ongoing washes
 
 🧩 Key Functional Capabilities You Must Support:
-Login System:
-Authenticates warehouse users and issues JWTs with a role-based model (WarehouseUser). Login is handled via /api/auth/login.
+Authentication:
+Warehouse users authenticate through Keycloak OIDC. The API never handles credentials or JWT issuance; clients must supply a Bearer token from Keycloak.
 
 Start New Wash:
 Users select a machine, scan/enter at least one PROT (instrument set), and optionally record observations. The system assigns a WashingId in YYMMDDXX format and stores related prot entries.

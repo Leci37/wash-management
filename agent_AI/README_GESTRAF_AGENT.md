@@ -54,13 +54,10 @@ controlmat/
 
 ## 🔧 Core Functional Requirements You Must Support
 
-**Login System**  
-- POST `/api/auth/login`
-- Uses `LoginRequestDto`, returns JWT on success  
-- Roles: `WarehouseUser`  
-- JWT token required for all protected routes
+**Authentication**
+Users authenticate via Keycloak OIDC and must present a Bearer token for protected routes.
 
-**Start Wash Flow**  
+**Start Wash Flow**
 - POST `/api/washing`  
 - Requires: MachineId, StartUserId, ≥1 `ProtDto`  
 - Optional: StartObservation  

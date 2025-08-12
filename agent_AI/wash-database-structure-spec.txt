@@ -1,15 +1,4 @@
-SUMISAN – Final Database Structure (Live‑Verified)
-Source of truth: SQL Server SUMISAN database (schema dump provided by user).
-Auth is Keycloak OIDC; local tables are not used for credential validation.
-
-1) USERS
-Purpose: Business reference for operators (not authentication).
-
-Column	Type	Null	Key	Identity
-UserId	int	NO	PK	YES
-UserName	varchar(100)	NO		NO
-
-Notes: No Role/Password columns. Handlers map Keycloak claims to local users if needed.
+XXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 2) MACHINES
 Purpose: Wash machines catalog.

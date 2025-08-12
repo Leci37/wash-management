@@ -3,19 +3,19 @@ USE SUMISAN;
 GO
 
 -- Insert dummy USERS (Basque names)
-INSERT INTO USERS (UserName, PasswordHash, Role) VALUES 
-('Ane Etxebarria', NULL, 'WarehouseUser'),
-('Iker Mendizabal', NULL, 'WarehouseUser'),
-('Maialen Garmendia', NULL, 'WarehouseUser'),
-('Unai Arrieta', NULL, 'WarehouseUser'),
-('Nahia Altuna', NULL, 'WarehouseUser'),
-('Eneko Iturralde', NULL, 'WarehouseUser'),
-('Irati Zabaleta', NULL, 'WarehouseUser'),
-('Gaizka Olaizola', NULL, 'WarehouseUser'),
-('Leire Otxoa', NULL, 'WarehouseUser'),
-('Ander Arozena', NULL, 'WarehouseUser'),
-('Oihana Aramburu', NULL, 'WarehouseUser'),
-('Mikel Agirre', NULL, 'WarehouseUser');
+INSERT INTO USERS (UserName, Role) VALUES
+('Ane Etxebarria', 'WarehouseUser'),
+('Iker Mendizabal', 'WarehouseUser'),
+('Maialen Garmendia', 'WarehouseUser'),
+('Unai Arrieta', 'WarehouseUser'),
+('Nahia Altuna', 'WarehouseUser'),
+('Eneko Iturralde', 'WarehouseUser'),
+('Irati Zabaleta', 'WarehouseUser'),
+('Gaizka Olaizola', 'WarehouseUser'),
+('Leire Otxoa', 'WarehouseUser'),
+('Ander Arozena', 'WarehouseUser'),
+('Oihana Aramburu', 'WarehouseUser'),
+('Mikel Agirre', 'WarehouseUser');
 
 -- Insert dummy MACHINES (Brands + Models)
 INSERT INTO MACHINES (Id, Name) VALUES

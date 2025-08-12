@@ -1,51 +1,35 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, tap, map } from 'rxjs';
-
-interface LoginResponseDto {
-  token: string;
-  userId: number;
-  userName?: string;
-  role?: string;
-}
+import Keycloak from 'keycloak-js';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly tokenKey = 'token';
-  private readonly roleKey = 'role';
-  private readonly userIdKey = 'userId';
+  private keycloak = new Keycloak({
+    url: 'http://localhost:8080',
+    realm: 'sumisan',
+    clientId: 'wash-frontend',
+  });
 
-  constructor(private http: HttpClient) {}
+  init(): Promise<boolean> {
+    return this.keycloak.init({ onLoad: 'login-required' });
+  }
 
-  login(credentials: { userName: string; password: string }): Observable<void> {
-    return this.http
-      .post<LoginResponseDto>('/api/auth/login', credentials)
-      .pipe(
-        tap((res) => {
-          localStorage.setItem(this.tokenKey, res.token);
-          localStorage.setItem(this.roleKey, res.role || '');
-          localStorage.setItem(this.userIdKey, res.userId.toString());
-        }),
-        map(() => void 0)
-      );
+  login(): void {
+    this.keycloak.login();
   }
 
   logout(): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.roleKey);
-    localStorage.removeItem(this.userIdKey);
+    this.keycloak.logout();
   }
 
-  getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+  getToken(): string | undefined {
+    return this.keycloak.token;
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    return !!this.keycloak.token;
   }
 
   hasRole(role: string): boolean {
-    return localStorage.getItem(this.roleKey) === role;
+    return this.keycloak.hasRealmRole(role);
   }
 }
-

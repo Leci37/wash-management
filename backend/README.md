@@ -48,7 +48,7 @@ backend/
 ### Phase 1: Domain Foundation
 ```csharp
 // controlmat.Domain/Entities/
-- User.cs          # UserId, UserName, PasswordHash, Role
+- User.cs          # UserId, UserName, Role
 - Machine.cs       # Id, Name  
 - Washing.cs       # WashingId, MachineId, UserIds, Status, Dates
 - Prot.cs          # WashingId, ProtId, BatchNumber, BagNumber
@@ -195,17 +195,9 @@ Once running, visit: https://localhost:7001/swagger
 | WashingId format | `StartWashCommand.Handler` | Generate YYMMDDXX format |
 | Photo naming | `UploadPhotoCommand.Handler` | Enforce {WashingId}_{XX}.jpg pattern |
 
-## 🔐 Authentication Flow
+## 🔐 Authentication
 
-```mermaid
-graph TD
-    A[POST /api/auth/login] --> B{Valid Credentials?}
-    B -->|Yes| C[Generate JWT]
-    B -->|No| D[401 Unauthorized]
-    C --> E[Return Token + User Info]
-    E --> F[Frontend stores JWT]
-    F --> G[Attach Bearer token to requests]
-```
+All authentication is handled by Keycloak using the OAuth2/OIDC protocol. Clients obtain a Bearer token from Keycloak and include it in the `Authorization` header for all protected API calls.
 
 ## 📝 Logging Strategy
 

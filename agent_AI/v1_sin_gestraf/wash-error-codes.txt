@@ -1,10 +1,4 @@
 ✅ ERROR CODES BY ENDPOINT
-🔐 /api/auth/login
-Code	Meaning
-200 OK	Login successful
-400 Bad Request	Missing or invalid fields
-401 Unauthorized	Invalid username or password
-
 🚿 /api/washing (POST – start wash)
 Code	Meaning
 201 Created	Wash started successfully

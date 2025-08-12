@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http;
 using System.Linq;
 using controlmat.Application;
 using controlmat.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,21 +45,21 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-var jwtSection = builder.Configuration.GetSection("Jwt");
-var key = System.Text.Encoding.UTF8.GetBytes(jwtSection["Key"]!);
-
-builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        var config = builder.Configuration;
+        options.Authority = config["Keycloak:Authority"];
+        options.Audience = config["Keycloak:Audience"];
+        options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+        options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSection["Issuer"],
-            ValidAudience = jwtSection["Audience"],
-            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key)
+            RoleClaimType = "roles",
+            NameClaimType = "preferred_username"
         };
     });
 

@@ -3,12 +3,9 @@
 Column	Type	Constraint
 UserId	int	Primary Key
 UserName	varchar(100)	Required
-(optional)	PasswordHash	For login
 (optional)	Role	varchar(50)
 
 Notes:
-
-Used for login/auth
 
 Referenced by Washing.StartUserId and Washing.EndUserId
 

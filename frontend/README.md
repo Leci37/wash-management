@@ -104,9 +104,9 @@ frontend/
 ## 🎯 Key Features Implemented
 
 ### 🔐 Authentication Flow
-- **Route**: `/login` (implicit - redirects handled in shell)
-- **Components**: Login form in perfil module (placeholder)
-- **Status**: ⚠️ UI ready, needs backend JWT integration
+- **Mechanism**: Keycloak OIDC redirect handled by Keycloak library
+- **Components**: Keycloak service initializes session and refreshes tokens
+- **Status**: ⚠️ UI ready, waiting for Keycloak configuration
 
 ### 🚿 Start New Wash (`/nuevo`)
 - **Features**: 
@@ -223,21 +223,20 @@ export class RealDataApiService {
 }
 ```
 
-### 2. JWT Authentication Integration
+### 2. Keycloak Authentication Integration
 
-**Components Ready**: Login forms exist in perfil module
-**Needs**: 
-- AuthService for login/logout
-- JWT token storage in localStorage  
-- AuthGuard for protected routes
+**Components Ready**: Keycloak service bootstrap
+**Needs**:
+- Configure `keycloak-js` or `keycloak-angular` with realm/client settings
+- AuthGuard to verify Keycloak session
 - HTTP interceptor for token attachment
 
 ```typescript
-// Implementation needed
+// Example skeleton
 export class AuthService {
-  login(credentials: LoginRequestDto): Observable<LoginResponseDto>;
+  init(): Promise<boolean>;
   logout(): void;
-  getToken(): string | null;
+  getToken(): string | undefined;
   isAuthenticated(): boolean;
 }
 ```
