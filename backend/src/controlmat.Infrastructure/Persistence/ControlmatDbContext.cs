@@ -16,14 +16,9 @@ public class ControlmatDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(e => e.UserId);
-            entity.Property(e => e.UserName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Role).IsRequired();
-        });
 
-        modelBuilder.ApplyConfiguration(new MachineConfiguration());
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
+
     }
 }
 
