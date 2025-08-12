@@ -12,10 +12,12 @@ public class ControlmatDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<Washing> Washings => Set<Washing>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new WashingConfiguration());
     }
 }
 
