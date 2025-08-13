@@ -17,6 +17,11 @@ namespace Controlmat.Infrastructure.Repositories
             _context = context;
         }
 
+        public async Task<Photo?> GetByIdAsync(int photoId)
+        {
+            return await _context.Photos.FirstOrDefaultAsync(p => p.Id == photoId);
+        }
+
         public async Task<IEnumerable<Photo>> GetByWashingIdAsync(long washingId)
         {
             return await _context.Photos
