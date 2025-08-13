@@ -20,12 +20,21 @@ public static class StartWashCommand
     public class Handler : IRequestHandler<Request, WashingResponseDto>
     {
         private readonly IWashingRepository _washingRepo;
+        private readonly IUserRepository _userRepo;
+        private readonly IProtRepository _protRepo;
         private readonly IMapper _mapper;
         private readonly ILogger<Handler> _logger;
 
-        public Handler(IWashingRepository washingRepo, IMapper mapper, ILogger<Handler> logger)
+        public Handler(
+            IWashingRepository washingRepo,
+            IUserRepository userRepo,
+            IProtRepository protRepo,
+            IMapper mapper,
+            ILogger<Handler> logger)
         {
             _washingRepo = washingRepo;
+            _userRepo = userRepo;
+            _protRepo = protRepo;
             _mapper = mapper;
             _logger = logger;
         }
@@ -36,6 +45,25 @@ public static class StartWashCommand
             {
                 var dto = request.Dto;
                 _logger.LogInformation("Starting wash: MachineId={MachineId}, StartUserId={StartUserId}", dto.MachineId, dto.StartUserId);
+
+                var startUser = await _userRepo.GetByIdAsync(dto.StartUserId);
+                if (startUser == null)
+                {
+                    _logger.LogWarning("StartUser not found: {UserId}", dto.StartUserId);
+                    throw new InvalidOperationException($"Start user {dto.StartUserId} not found");
+                }
+
+                var existingProtIds = (await _protRepo.GetActiveProtIdsAsync()).ToHashSet();
+                var duplicateProts = dto.ProtEntries
+                    .Where(p => existingProtIds.Contains(p.ProtId))
+                    .Select(p => p.ProtId)
+                    .ToList();
+
+                if (duplicateProts.Any())
+                {
+                    _logger.LogWarning("Duplicate PROTs detected: {ProtIds}", duplicateProts);
+                    throw new InvalidOperationException($"PROTs already in use: {string.Join(", ", duplicateProts)}");
+                }
 
                 var washing = new WashingEntity
                 {

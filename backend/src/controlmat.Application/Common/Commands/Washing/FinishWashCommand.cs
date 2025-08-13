@@ -32,7 +32,8 @@ public static class FinishWashCommand
         {
             try
             {
-                _logger.LogInformation("Finishing wash {WashingId} by user {EndUserId}", request.WashingId, request.Dto.EndUserId);
+                var dto = request.Dto;
+                _logger.LogInformation("Finishing wash {WashingId} by user {EndUserId}", request.WashingId, dto.EndUserId);
 
                 var washing = await _washingRepo.GetByIdAsync(request.WashingId)
                     ?? throw new InvalidOperationException($"Washing with ID {request.WashingId} not found");
@@ -40,8 +41,21 @@ public static class FinishWashCommand
                 if (washing.Status == 'F')
                     throw new InvalidOperationException($"Washing {request.WashingId} already finished");
 
-                washing.EndUserId = request.Dto.EndUserId;
-                washing.FinishObservation = request.Dto.FinishObservation;
+                if (washing.StartUserId == dto.EndUserId)
+                {
+                    _logger.LogWarning("Same user trying to start and finish wash: {UserId}", dto.EndUserId);
+                    throw new InvalidOperationException("The user who finishes the wash must be different from the user who started it");
+                }
+
+                var washDuration = DateTime.UtcNow - washing.StartDate;
+                if (washDuration.TotalMinutes < 5)
+                {
+                    _logger.LogWarning("Wash too short: {Duration} minutes", washDuration.TotalMinutes);
+                    throw new InvalidOperationException("Wash cycle must run for at least 5 minutes");
+                }
+
+                washing.EndUserId = dto.EndUserId;
+                washing.FinishObservation = dto.FinishObservation;
                 washing.EndDate = DateTime.UtcNow;
                 washing.Status = 'F';
 
