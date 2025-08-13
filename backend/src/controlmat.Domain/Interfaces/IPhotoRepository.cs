@@ -7,7 +7,7 @@ namespace Controlmat.Domain.Interfaces;
 
 public interface IPhotoRepository
 {
-    Task<IEnumerable<Photo>> GetByWashingIdAsync(long washingId);
+    Task<List<Photo>> GetByWashIdAsync(long washingId);
     Task<int> CountByWashingIdAsync(long washingId);
     Task AddAsync(Photo photo);
 }
