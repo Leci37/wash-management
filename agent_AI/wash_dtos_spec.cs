@@ -12,7 +12,7 @@ namespace Controlmat.Application.Common.Dto
     // Sent when starting a new wash cycle. Contains machine, operator, optional observations, and at least one Prot entry.
     public class NewWashDto
     {
-        public int MachineId { get; set; }                    // Must be 1 or 2
+        public short MachineId { get; set; }                   // Must be 1 or 2
         public int StartUserId { get; set; }                  // Operator initiating the wash
         public string? StartObservation { get; set; }         // Optional field for initial notes
         public List<ProtDto> ProtEntries { get; set; } = new(); // Required: at least one Prot
@@ -68,7 +68,7 @@ namespace Controlmat.Application.Common.Dto
     public class WashingResponseDto
     {
         public long WashingId { get; set; }
-        public int MachineId { get; set; }
+        public short MachineId { get; set; }
         public int StartUserId { get; set; }
         public int? EndUserId { get; set; }                     // Nullable until wash is finalized
         public DateTime StartDate { get; set; }
@@ -87,14 +87,13 @@ namespace Controlmat.Application.Common.Dto
     {
         public int UserId { get; set; }
         public string UserName { get; set; } = string.Empty;
-        public string? Role { get; set; }
     }
 
     // 🏭 MachineDto  
     // Machine representation for dropdowns and availability checking
     public class MachineDto
     {
-        public int Id { get; set; }
+        public short Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public bool IsAvailable { get; set; } = true;           // Calculated based on active washes
     }
