@@ -32,25 +32,36 @@ public static class StartWashCommand
 
         public async Task<WashingResponseDto> Handle(Request request, CancellationToken cancellationToken)
         {
-            var dto = request.Dto;
-            var washing = new WashingEntity
+            try
             {
-                MachineId = dto.MachineId,
-                StartUserId = dto.StartUserId,
-                StartDate = DateTime.UtcNow,
-                Status = 'P',
-                StartObservation = dto.StartObservation,
-                Prots = dto.ProtEntries.Select(p => new Prot
+                var dto = request.Dto;
+                _logger.LogInformation("Starting wash: MachineId={MachineId}, StartUserId={StartUserId}", dto.MachineId, dto.StartUserId);
+
+                var washing = new WashingEntity
                 {
-                    ProtId = p.ProtId,
-                    BatchNumber = p.BatchNumber,
-                    BagNumber = p.BagNumber
-                }).ToList()
-            };
+                    MachineId = dto.MachineId,
+                    StartUserId = dto.StartUserId,
+                    StartDate = DateTime.UtcNow,
+                    Status = 'P',
+                    StartObservation = dto.StartObservation,
+                    Prots = dto.ProtEntries.Select(p => new Prot
+                    {
+                        ProtId = p.ProtId,
+                        BatchNumber = p.BatchNumber,
+                        BagNumber = p.BagNumber
+                    }).ToList()
+                };
 
-            await _washingRepo.AddAsync(washing);
+                await _washingRepo.AddAsync(washing);
+                _logger.LogInformation("Wash {WashingId} started successfully", washing.WashingId);
 
-            return _mapper.Map<WashingResponseDto>(washing);
+                return _mapper.Map<WashingResponseDto>(washing);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error starting wash");
+                throw;
+            }
         }
     }
 }
