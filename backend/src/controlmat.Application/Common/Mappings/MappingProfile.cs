@@ -27,7 +27,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.WashingId, opt => opt.Ignore())
             .ForMember(dest => dest.Washing, opt => opt.Ignore());
 
-        CreateMap<Photo, PhotoDto>();
+        CreateMap<Photo, PhotoDto>()
+            .ForMember(dest => dest.DownloadUrl, opt => opt.MapFrom(src => $"/api/photos/{src.Id}/download"));
         CreateMap<User, UserDto>();
 
         CreateMap<Machine, MachineDto>()
