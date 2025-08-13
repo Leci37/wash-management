@@ -274,6 +274,10 @@ namespace Controlmat.Api.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("{washId}/photos")]
+        public async Task<IActionResult> GetWashPhotos(long washId)
+            => Ok(await _mediator.Send(new GetWashPhotosQuery.Request(washId)));
     }
 }
 
