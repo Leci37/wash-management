@@ -39,6 +39,8 @@ Thumbs.db
 
 # Logs
 logs/
+Logs/
+**/Logs/
 *.log
 
 # Environment files
