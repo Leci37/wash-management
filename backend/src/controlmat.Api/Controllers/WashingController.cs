@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MediatR;
-using Controlmat.Application.Common.Commands.Washing;
+using Controlmat.Application.Common.Commands.WashCycle;
 using Controlmat.Application.Common.Queries.Washing;
 using Controlmat.Application.Common.Queries.User;
 using Controlmat.Application.Common.Queries.Machine;

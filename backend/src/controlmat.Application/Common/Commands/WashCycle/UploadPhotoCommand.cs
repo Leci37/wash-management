@@ -6,7 +6,7 @@ using Controlmat.Domain.Interfaces;
 using Controlmat.Domain.Entities;
 using System.Security.Claims;
 
-namespace Controlmat.Application.Common.Commands.Washing;
+namespace Controlmat.Application.Common.Commands.WashCycle;
 
 public static class UploadPhotoCommand
 {
