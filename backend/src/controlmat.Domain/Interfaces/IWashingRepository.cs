@@ -11,8 +11,7 @@ public interface IWashingRepository
 {
     Task<Washing?> GetByIdAsync(long id);
     Task<Washing?> GetByIdWithDetailsAsync(long id);
-    Task<List<Washing>> GetActiveWashesAsync();
-    Task<Washing?> GetActiveWashByMachineAsync(int machineId);
+    Task<IEnumerable<Washing>> GetActiveWashesAsync();
     Task<int> CountActiveAsync();
     Task<bool> IsMachineInUseAsync(short machineId);
     Task<long?> GetMaxWashingIdByDateAsync(DateTime date);
