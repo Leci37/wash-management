@@ -167,17 +167,6 @@ namespace Controlmat.Api.Controllers
         }
 
         /// <summary>
-        /// Get photos for a wash
-        /// </summary>
-        /// <param name="washId">Washing ID</param>
-        /// <returns>List of photos with metadata</returns>
-        /// <response code="200">Photos retrieved successfully</response>
-        [HttpGet("{washId}/photos")]
-        [ProducesResponseType(typeof(List<PhotoDto>), 200)]
-        public async Task<IActionResult> GetWashPhotos(long washId)
-            => Ok(await _mediator.Send(new GetWashPhotosQuery.Request(washId)));
-
-        /// <summary>
         /// Add a PROT (instrument kit) to an active wash
         /// </summary>
         /// <param name="id">Washing ID</param>
