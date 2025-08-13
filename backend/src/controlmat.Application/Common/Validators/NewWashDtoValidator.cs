@@ -9,7 +9,7 @@ public class NewWashDtoValidator : AbstractValidator<NewWashDto>
     {
         RuleFor(x => x.MachineId)
             .NotEmpty().WithMessage("MachineId is required")
-            .InclusiveBetween(1, 2).WithMessage("MachineId must be 1 or 2");
+            .InclusiveBetween((short)1, (short)2).WithMessage("MachineId must be 1 or 2");
 
         RuleFor(x => x.StartUserId)
             .NotEmpty().WithMessage("StartUserId is required")

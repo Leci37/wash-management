@@ -46,7 +46,7 @@ namespace Controlmat.Infrastructure.Repositories
             return await _context.Washings.CountAsync(w => w.Status != 'F');
         }
 
-        public async Task<bool> IsMachineInUseAsync(int machineId)
+        public async Task<bool> IsMachineInUseAsync(short machineId)
         {
             return await _context.Washings.AnyAsync(w => w.MachineId == machineId && w.Status != 'F');
         }
