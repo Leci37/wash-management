@@ -30,22 +30,34 @@ public static class AddProtCommand
 
         public async Task<Unit> Handle(Request request, CancellationToken cancellationToken)
         {
-            var washing = await _washingRepo.GetByIdAsync(request.WashingId)
-                ?? throw new InvalidOperationException($"Washing with ID {request.WashingId} not found");
-
-            if (washing.Status == 'F')
-                throw new InvalidOperationException($"Washing {request.WashingId} is already finished");
-
-            var prot = new Prot
+            try
             {
-                WashingId = request.WashingId,
-                ProtId = request.Dto.ProtId,
-                BatchNumber = request.Dto.BatchNumber,
-                BagNumber = request.Dto.BagNumber
-            };
+                _logger.LogInformation("Adding prot {ProtId} to wash {WashingId}", request.Dto.ProtId, request.WashingId);
 
-            await _protRepo.AddAsync(prot);
-            return Unit.Value;
+                var washing = await _washingRepo.GetByIdAsync(request.WashingId)
+                    ?? throw new InvalidOperationException($"Washing with ID {request.WashingId} not found");
+
+                if (washing.Status == 'F')
+                    throw new InvalidOperationException($"Washing {request.WashingId} is already finished");
+
+                var prot = new Prot
+                {
+                    WashingId = request.WashingId,
+                    ProtId = request.Dto.ProtId,
+                    BatchNumber = request.Dto.BatchNumber,
+                    BagNumber = request.Dto.BagNumber
+                };
+
+                await _protRepo.AddAsync(prot);
+                _logger.LogInformation("Prot {ProtId} added to wash {WashingId}", prot.ProtId, prot.WashingId);
+
+                return Unit.Value;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding prot {ProtId} to wash {WashingId}", request.Dto.ProtId, request.WashingId);
+                throw;
+            }
         }
     }
 }
