@@ -164,7 +164,7 @@ namespace Controlmat.Api.Controllers
             }
         }
 
-        /// <summary>
+
         /// Get detailed wash information by ID
         /// </summary>
         /// <param name="id">Washing ID</param>

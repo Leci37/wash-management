@@ -43,6 +43,18 @@ namespace Controlmat.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<Washing?> GetActiveWashByMachineAsync(int machineId)
+        {
+            return await _context.Washings
+                .Where(w => w.MachineId == machineId && w.Status == 'P')
+                .Include(w => w.Prots)
+                .Include(w => w.Photos)
+                .Include(w => w.StartUser)
+                .Include(w => w.EndUser)
+                .Include(w => w.Machine)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<int> CountActiveAsync()
         {
             return await _context.Washings.CountAsync(w => w.Status != 'F');
