@@ -1,12 +1,7 @@
 {
   "name": "sumisan-dev",
   "dockerFile": "Dockerfile",
-  "runArgs": [
-    "--network=sumisan-net"  // So the container can reach SQL container
-  ],
-  "settings": {
-    "terminal.integrated.defaultProfile.linux": "bash"
-  },
+  "runArgs": ["--network=sumisan-net"],
   "postCreateCommand": "./setup_sumisan_dev.sh",
   "forwardPorts": [1434, 5000, 5001, 4200],
   "remoteEnv": {
@@ -16,12 +11,6 @@
     "source=${localWorkspaceFolder}/.env.sumisan,target=/workspaces/sumisan/.env.sumisan,type=bind,consistency=cached"
   ],
   "features": {
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "18"
-    },
-    "ghcr.io/devcontainers/features/dotnet:1": {
-      "version": "6.0"
-    },
     "ghcr.io/devcontainers/features/docker-in-docker:1": {
       "version": "latest"
     }
