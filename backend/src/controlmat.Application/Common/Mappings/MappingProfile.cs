@@ -1,6 +1,7 @@
 using AutoMapper;
 using Controlmat.Application.Common.Dto;
 using Controlmat.Domain.Entities;
+using System.Linq;
 
 namespace Controlmat.Application.Common.Mappings;
 
@@ -32,5 +33,12 @@ public class MappingProfile : Profile
 
         CreateMap<Machine, MachineDto>()
             .ForMember(dest => dest.IsAvailable, opt => opt.Ignore());
+
+        CreateMap<Washing, LavadoDto>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.Photos, opt => opt.MapFrom(src => src.Photos.Select(p => p.FileName)));
+
+        CreateMap<LavadoDto, NewWashDto>()
+            .ForMember(dest => dest.ProtEntries, opt => opt.MapFrom(src => src.Prots));
     }
 }

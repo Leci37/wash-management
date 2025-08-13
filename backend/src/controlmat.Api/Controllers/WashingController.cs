@@ -43,7 +43,7 @@ namespace Controlmat.Api.Controllers
         [ProducesResponseType(typeof(ProblemDetails), 409)]
         public async Task<IActionResult> StartWash([FromBody] NewWashDto dto)
         {
-            _logger.LogInformation("📝 POST /api/washing - Starting new wash for MachineId: {MachineId}, StartUserId: {StartUserId}, ProtCount: {ProtCount}", 
+            _logger.LogInformation("📝 POST /api/washing - Starting new wash for MachineId: {MachineId}, StartUserId: {StartUserId}, ProtCount: {ProtCount}",
                 dto.MachineId, dto.StartUserId, dto.ProtEntries?.Count ?? 0);
 
             try
@@ -61,6 +61,25 @@ namespace Controlmat.Api.Controllers
                     Status = 409
                 });
             }
+        }
+
+        [HttpPost("lavado")]
+        [ProducesResponseType(typeof(WashingResponseDto), 200)]
+        public async Task<IActionResult> StartLavado([FromBody] LavadoDto lavado)
+        {
+            _logger.LogInformation("📝 POST /api/washing/lavado - MachineId: {MachineId}, StartUserId: {StartUserId}, ProtCount: {ProtCount}",
+                lavado.MachineId, lavado.StartUserId, lavado.Prots?.Count ?? 0);
+
+            var newWashDto = new NewWashDto
+            {
+                MachineId = lavado.MachineId,
+                StartUserId = lavado.StartUserId,
+                StartObservation = lavado.StartObservation,
+                ProtEntries = lavado.Prots
+            };
+
+            var result = await _mediator.Send(new StartWashCommand.Request { Dto = newWashDto });
+            return Ok(result);
         }
 
         /// <summary>
