@@ -30,20 +30,32 @@ public static class FinishWashCommand
 
         public async Task<WashingResponseDto> Handle(Request request, CancellationToken cancellationToken)
         {
-            var washing = await _washingRepo.GetByIdAsync(request.WashingId)
-                ?? throw new InvalidOperationException($"Washing with ID {request.WashingId} not found");
+            try
+            {
+                _logger.LogInformation("Finishing wash {WashingId} by user {EndUserId}", request.WashingId, request.Dto.EndUserId);
 
-            if (washing.Status == 'F')
-                throw new InvalidOperationException($"Washing {request.WashingId} already finished");
+                var washing = await _washingRepo.GetByIdAsync(request.WashingId)
+                    ?? throw new InvalidOperationException($"Washing with ID {request.WashingId} not found");
 
-            washing.EndUserId = request.Dto.EndUserId;
-            washing.FinishObservation = request.Dto.FinishObservation;
-            washing.EndDate = DateTime.UtcNow;
-            washing.Status = 'F';
+                if (washing.Status == 'F')
+                    throw new InvalidOperationException($"Washing {request.WashingId} already finished");
 
-            await _washingRepo.UpdateAsync(washing);
+                washing.EndUserId = request.Dto.EndUserId;
+                washing.FinishObservation = request.Dto.FinishObservation;
+                washing.EndDate = DateTime.UtcNow;
+                washing.Status = 'F';
 
-            return _mapper.Map<WashingResponseDto>(washing);
+                await _washingRepo.UpdateAsync(washing);
+
+                _logger.LogInformation("Wash {WashingId} finished", washing.WashingId);
+
+                return _mapper.Map<WashingResponseDto>(washing);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error finishing wash {WashingId}", request.WashingId);
+                throw;
+            }
         }
     }
 }
