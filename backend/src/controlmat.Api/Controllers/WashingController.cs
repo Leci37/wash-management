@@ -164,6 +164,10 @@ namespace Controlmat.Api.Controllers
             }
         }
 
+        [HttpGet("{washId}/photos")]
+        public async Task<IActionResult> GetWashPhotos(long washId)
+            => Ok(await _mediator.Send(new GetWashPhotosQuery.Request(washId)));
+
 
         /// Get detailed wash information by ID
         /// </summary>

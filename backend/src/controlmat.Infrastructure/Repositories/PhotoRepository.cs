@@ -22,10 +22,11 @@ namespace Controlmat.Infrastructure.Repositories
             return await _context.Photos.FirstOrDefaultAsync(p => p.Id == photoId);
         }
 
-        public async Task<IEnumerable<Photo>> GetByWashingIdAsync(long washingId)
+        public async Task<List<Photo>> GetByWashIdAsync(long washingId)
         {
             return await _context.Photos
                 .Where(p => p.WashingId == washingId)
+                .OrderBy(p => p.CreatedAt)
                 .ToListAsync();
         }
 
