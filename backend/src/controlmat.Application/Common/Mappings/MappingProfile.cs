@@ -16,10 +16,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.StatusDescription, opt => opt.MapFrom(src => src.Status == 'P' ? "En Progreso" : "Finalizado"));
 
         CreateMap<Washing, ActiveWashDto>()
-            .ForMember(dest => dest.MachineName, opt => opt.MapFrom(src => src.Machine.Name))
-            .ForMember(dest => dest.StartUserName, opt => opt.MapFrom(src => src.StartUser.UserName))
-            .ForMember(dest => dest.ProtCount, opt => opt.MapFrom(src => src.Prots.Count))
-            .ForMember(dest => dest.PhotoCount, opt => opt.MapFrom(src => src.Photos.Count));
+            .ForMember(dest => dest.StartUserName, opt => opt.MapFrom(src => src.StartUser.UserName));
 
         CreateMap<Prot, ProtDto>();
         CreateMap<ProtDto, Prot>()
