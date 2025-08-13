@@ -31,7 +31,9 @@ namespace Controlmat.Infrastructure.Persistence
             modelBuilder.Entity<Machine>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Id)
+                    .ValueGeneratedNever()
+                    .HasColumnType("smallint");
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(50);
@@ -41,6 +43,9 @@ namespace Controlmat.Infrastructure.Persistence
             {
                 entity.HasKey(e => e.WashingId);
                 entity.Property(e => e.WashingId).ValueGeneratedNever();
+
+                entity.Property(e => e.MachineId)
+                    .HasColumnType("smallint");
 
                 entity.Property(e => e.Status)
                     .IsRequired()
