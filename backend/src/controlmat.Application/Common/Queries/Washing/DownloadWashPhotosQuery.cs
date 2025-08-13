@@ -27,7 +27,7 @@ public static class DownloadWashPhotosQuery
         {
             _logger.LogInformation("🌀 DownloadWashPhotosQuery - STARTED. WashId: {WashId}", request.WashId);
 
-            var photos = (await _repository.GetByWashingIdAsync(request.WashId)).ToList();
+            var photos = await _repository.GetByWashingIdAsync(request.WashId);
             if (!photos.Any())
             {
                 _logger.LogWarning("⚠️ No photos found for wash: {WashId}", request.WashId);

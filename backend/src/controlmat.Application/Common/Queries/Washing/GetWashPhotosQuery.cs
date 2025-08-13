@@ -24,7 +24,7 @@ public static class GetWashPhotosQuery
         {
             _logger.LogInformation("🌀 GetWashPhotosQuery - STARTED. WashId: {WashId}", request.WashId);
             
-            var photos = await _repository.GetByWashIdAsync(request.WashId);
+            var photos = await _repository.GetByWashingIdAsync(request.WashId);
             var result = photos.Select(p => new PhotoDto
             {
                 Id = p.Id,
