@@ -164,6 +164,25 @@ namespace Controlmat.Api.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Download all photos for a wash as a ZIP archive
+        /// </summary>
+        /// <param name="washId">Washing ID</param>
+        /// <returns>ZIP file containing all photos</returns>
+        /// <response code="200">ZIP file generated successfully</response>
+        /// <response code="404">No photos found for this wash</response>
+        [HttpGet("{washId}/photos/download")]
+        public async Task<IActionResult> DownloadWashPhotos(long washId)
+        {
+            var result = await _mediator.Send(new DownloadWashPhotosQuery.Request(washId));
+            if (result == null)
+                return NotFound("No photos found for this wash");
+
+            return File(result.ZipBytes, "application/zip", $"wash_{washId}_photos.zip");
+        }
+
+
         [HttpGet("{washId}/photos")]
         public async Task<IActionResult> GetWashPhotos(long washId)
             => Ok(await _mediator.Send(new GetWashPhotosQuery.Request(washId)));
@@ -177,6 +196,7 @@ namespace Controlmat.Api.Controllers
         [HttpGet("by-machine/{machineId}")]
         public async Task<IActionResult> GetByMachine(int machineId)
             => Ok(await _mediator.Send(new GetWashByMachineQuery.Request(machineId)));
+
 
         /// Get detailed wash information by ID
         /// </summary>
