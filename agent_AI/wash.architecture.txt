@@ -104,7 +104,7 @@ public interface IWashingRepository
 {
     Task AddAsync(Washing wash);
     Task<int> CountActiveAsync();
-    Task<bool> IsMachineInUseAsync(int machineId);
+    Task<bool> IsMachineInUseAsync(short machineId);
     Task<Washing?> GetByIdAsync(long id);
 }
 ```

@@ -165,8 +165,8 @@ namespace Controlmat.Infrastructure.Persistence
             );
 
             modelBuilder.Entity<Machine>().HasData(
-                new Machine { Id = 1, Name = "Máquina 1" },
-                new Machine { Id = 2, Name = "Máquina 2" }
+                new Machine { Id = (short)1, Name = "Máquina 1" },
+                new Machine { Id = (short)2, Name = "Máquina 2" }
             );
 
             if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
