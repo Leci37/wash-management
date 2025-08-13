@@ -26,10 +26,16 @@ public class MappingProfile : Profile
 
         CreateMap<Photo, PhotoDto>()
             .ForMember(dest => dest.DownloadUrl, opt => opt.MapFrom(src => $"/api/photos/{src.Id}/download"));
+        CreateMap<Photo, PhotoDownloadDto>()
+            .ForMember(dest => dest.FileBytes, opt => opt.Ignore())
+            .ForMember(dest => dest.ContentType, opt => opt.Ignore());
         CreateMap<User, UserDto>();
 
         CreateMap<Machine, MachineDto>()
             .ForMember(dest => dest.IsAvailable, opt => opt.Ignore());
+
+        CreateMap<Washing, WashPhotosZipDto>()
+            .ForMember(dest => dest.ZipBytes, opt => opt.Ignore());
 
     }
 }

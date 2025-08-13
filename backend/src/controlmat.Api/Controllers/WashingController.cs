@@ -13,7 +13,7 @@ namespace Controlmat.Api.Controllers
     /// </summary>
     [ApiController]
     [Route("api/washing")]
-    [AllowAnonymous]
+    [Authorize(Roles = "WarehouseUser")]
     [Produces("application/json")]
     [Tags("Washing")]
     public class WashingController : ControllerBase
