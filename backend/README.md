@@ -73,7 +73,7 @@ backend/
 ### Phase 3: CQRS Implementation
 ```csharp
 // controlmat.Application/Common/
-├── Commands/Washing/
+├── Commands/WashCycle/
 │   ├── StartWashCommand.cs          # Begin new wash cycle
 │   ├── FinishWashCommand.cs         # Complete wash with validation
 │   ├── AddProtCommand.cs            # Add PROT to existing wash

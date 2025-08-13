@@ -172,7 +172,7 @@ Implement wash business rules in CQRS handlers:
 ### **File Organization**
 ```
 Application/Common/
-├── Commands/Washing/
+├── Commands/WashCycle/
 │   ├── StartWashCommand.cs
 │   ├── FinishWashCommand.cs
 │   └── UploadPhotoCommand.cs
