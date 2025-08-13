@@ -165,6 +165,15 @@ namespace Controlmat.Api.Controllers
         }
 
 
+        /// <summary>
+        /// Get the active wash for a specific machine
+        /// </summary>
+        /// <param name="machineId">Machine ID</param>
+        /// <returns>Active wash details including PROTs and photos</returns>
+        [HttpGet("by-machine/{machineId}")]
+        public async Task<IActionResult> GetByMachine(int machineId)
+            => Ok(await _mediator.Send(new GetWashByMachineQuery.Request(machineId)));
+
         /// Get detailed wash information by ID
         /// </summary>
         /// <param name="id">Washing ID</param>
