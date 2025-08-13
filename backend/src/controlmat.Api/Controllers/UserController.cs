@@ -12,7 +12,7 @@ namespace Controlmat.Api.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Policy = "WarehouseUser")]
+    [AllowAnonymous]
     [Produces("application/json")]
     [Tags("Lookup")]
     public class LookupController : ControllerBase
@@ -31,12 +31,8 @@ namespace Controlmat.Api.Controllers
         /// </summary>
         /// <returns>List of users</returns>
         /// <response code="200">Users retrieved successfully</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden</response>
         [HttpGet("users")]
         [ProducesResponseType(typeof(List<UserDto>), 200)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
         public async Task<IActionResult> GetUsers()
         {
             _logger.LogInformation("📝 GET /api/lookup/users");
@@ -49,12 +45,8 @@ namespace Controlmat.Api.Controllers
         /// </summary>
         /// <returns>List of machines with availability flags</returns>
         /// <response code="200">Machines retrieved successfully</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden</response>
         [HttpGet("machines")]
         [ProducesResponseType(typeof(List<MachineDto>), 200)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
         public async Task<IActionResult> GetMachines()
         {
             _logger.LogInformation("📝 GET /api/lookup/machines");

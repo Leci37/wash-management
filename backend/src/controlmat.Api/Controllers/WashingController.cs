@@ -15,7 +15,7 @@ namespace Controlmat.Api.Controllers
     /// </summary>
     [ApiController]
     [Route("api/washing")]
-    [Authorize(Policy = "WarehouseUser")] // Keycloak role requirement
+    [AllowAnonymous]
     [Produces("application/json")]
     [Tags("Washing")]
     public class WashingController : ControllerBase
@@ -36,14 +36,10 @@ namespace Controlmat.Api.Controllers
         /// <returns>Created wash details</returns>
         /// <response code="201">Wash started successfully</response>
         /// <response code="400">Invalid input data</response>
-        /// <response code="401">Unauthorized - missing or invalid JWT token</response>
-        /// <response code="403">Forbidden - insufficient role (requires WarehouseUser)</response>
         /// <response code="409">Conflict - business rule violation (max 2 active washes, machine in use, etc.)</response>
         [HttpPost]
         [ProducesResponseType(typeof(WashingResponseDto), 201)]
         [ProducesResponseType(typeof(ValidationProblemDetails), 400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
         [ProducesResponseType(typeof(ProblemDetails), 409)]
         public async Task<IActionResult> StartWash([FromBody] NewWashDto dto)
         {
@@ -75,14 +71,12 @@ namespace Controlmat.Api.Controllers
         /// <returns>Updated wash details</returns>
         /// <response code="200">Wash finished successfully</response>
         /// <response code="400">Invalid input data</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden - missing role or no photos uploaded</response>
+        /// <response code="403">Forbidden - photo requirements not met</response>
         /// <response code="404">Wash not found</response>
         /// <response code="409">Wash already finished</response>
         [HttpPut("{id}/finish")]
         [ProducesResponseType(typeof(WashingResponseDto), 200)]
         [ProducesResponseType(typeof(ValidationProblemDetails), 400)]
-        [ProducesResponseType(401)]
         [ProducesResponseType(403)]
         [ProducesResponseType(typeof(ProblemDetails), 404)]
         [ProducesResponseType(typeof(ProblemDetails), 409)]
@@ -118,15 +112,11 @@ namespace Controlmat.Api.Controllers
         /// <returns>Uploaded filename</returns>
         /// <response code="201">Photo uploaded successfully</response>
         /// <response code="400">Invalid file type, size, or wash not found</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden</response>
         /// <response code="409">Photo limit exceeded (99 max per wash)</response>
         /// <response code="413">File too large</response>
         [HttpPost("{id}/photos")]
         [ProducesResponseType(typeof(string), 201)]
         [ProducesResponseType(typeof(ProblemDetails), 400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
         [ProducesResponseType(typeof(ProblemDetails), 409)]
         [ProducesResponseType(typeof(ProblemDetails), 413)]
         [RequestSizeLimit(5 * 1024 * 1024)] // 5MB limit
@@ -184,15 +174,11 @@ namespace Controlmat.Api.Controllers
         /// <returns>Success confirmation</returns>
         /// <response code="200">PROT added successfully</response>
         /// <response code="400">Invalid PROT format</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden</response>
         /// <response code="404">Wash not found</response>
         /// <response code="409">Wash already finished or duplicate PROT</response>
         [HttpPost("{id}/prots")]
         [ProducesResponseType(200)]
         [ProducesResponseType(typeof(ValidationProblemDetails), 400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
         [ProducesResponseType(typeof(ProblemDetails), 404)]
         [ProducesResponseType(typeof(ProblemDetails), 409)]
         public async Task<IActionResult> AddProt([Required] long id, [FromBody] AddProtDto dto)
@@ -230,12 +216,8 @@ namespace Controlmat.Api.Controllers
         /// </summary>
         /// <returns>List of active washes with basic details</returns>
         /// <response code="200">Success - returns 0-2 active washes</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden</response>
         [HttpGet("active")]
         [ProducesResponseType(typeof(List<ActiveWashDto>), 200)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
         public async Task<IActionResult> GetActiveWashes()
         {
             _logger.LogInformation("📝 GET /api/washing/active");
@@ -250,13 +232,9 @@ namespace Controlmat.Api.Controllers
         /// <param name="id">Washing ID</param>
         /// <returns>Complete wash details including PROTs and photos</returns>
         /// <response code="200">Wash found and returned</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden</response>
         /// <response code="404">Wash not found</response>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(WashingResponseDto), 200)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
         [ProducesResponseType(typeof(ProblemDetails), 404)]
         public async Task<IActionResult> GetWashById([Required] long id)
         {
