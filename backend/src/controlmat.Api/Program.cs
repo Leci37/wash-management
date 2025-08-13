@@ -2,6 +2,7 @@ using Serilog;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
+using System.IO;
 using AutoMapper;
 using MediatR;
 using FluentValidation;
@@ -12,8 +13,12 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Ensure the log directory exists
+Directory.CreateDirectory("Logs");
+
 builder.Host.UseSerilog((ctx, lc) => lc
     .WriteTo.Console()
+    .WriteTo.File("Logs/controlmat-.log", rollingInterval: RollingInterval.Day)
     .Enrich.WithEnvironmentUserName());
 
 // Dependency registrations
