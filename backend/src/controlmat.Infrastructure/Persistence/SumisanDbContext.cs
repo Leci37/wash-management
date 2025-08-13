@@ -157,26 +157,21 @@ namespace Controlmat.Infrastructure.Persistence
 
         private void SeedData(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Machine>().HasData(
+                new Machine { Id = (short)1, Name = "Máquina Lavado 1" },
+                new Machine { Id = (short)2, Name = "Máquina Lavado 2" }
+            );
+
+            modelBuilder.Entity<User>().HasData(
+                new User { UserId = 1, UserName = "operario1" },
+                new User { UserId = 2, UserName = "operario2" },
+                new User { UserId = 3, UserName = "supervisor1" }
+            );
+
             modelBuilder.Entity<Parameter>().HasData(
                 new Parameter { Id = 1, Name = "ImagePath", Value = "C:\\SumiSan\\Photos" },
-                new Parameter { Id = 2, Name = "MaxPhotosPerWash", Value = "99" },
-                new Parameter { Id = 3, Name = "MaxFileSizeMB", Value = "5" },
-                new Parameter { Id = 4, Name = "AllowedExtensions", Value = "jpg,jpeg,png" }
+                new Parameter { Id = 2, Name = "MaxPhotosPerWash", Value = "99" }
             );
-
-            modelBuilder.Entity<Machine>().HasData(
-                new Machine { Id = (short)1, Name = "Máquina 1" },
-                new Machine { Id = (short)2, Name = "Máquina 2" }
-            );
-
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
-            {
-                modelBuilder.Entity<User>().HasData(
-                    new User { UserId = 1, UserName = "operario1" },
-                    new User { UserId = 2, UserName = "operario2" },
-                    new User { UserId = 3, UserName = "supervisor" }
-                );
-            }
         }
     }
 }
