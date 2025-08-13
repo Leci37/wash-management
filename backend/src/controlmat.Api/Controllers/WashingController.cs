@@ -245,6 +245,10 @@ namespace Controlmat.Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet("by-machine/{machineId}")]
+        public async Task<IActionResult> GetByMachine(int machineId)
+            => Ok(await _mediator.Send(new GetWashByMachineQuery.Request(machineId)));
+
         /// <summary>
         /// Get detailed wash information by ID
         /// </summary>
