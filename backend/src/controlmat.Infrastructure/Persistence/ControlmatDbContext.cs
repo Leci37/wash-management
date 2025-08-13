@@ -12,6 +12,11 @@ public class ControlmatDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<Machine> Machines => Set<Machine>();
+    public DbSet<Washing> Washings => Set<Washing>();
+    public DbSet<Prot> Prots => Set<Prot>();
+    public DbSet<Photo> Photos => Set<Photo>();
+    public DbSet<Parameter> Parameters => Set<Parameter>();
 
 
     public DbSet<Parameter> Parameters => Set<Parameter>();
@@ -30,6 +35,7 @@ public class ControlmatDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
 
+
         modelBuilder.ApplyConfiguration(new UserConfiguration());
 
         modelBuilder.ApplyConfiguration(new ParameterConfiguration());
@@ -41,8 +47,6 @@ public class ControlmatDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ProtConfiguration());
 
         modelBuilder.ApplyConfiguration(new WashingConfiguration());
-
-
 
     }
 }
