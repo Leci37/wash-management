@@ -87,10 +87,10 @@ controlmat/
 
 | Feature           | Component Type | Location                                                   |
 | ----------------- | -------------- | ---------------------------------------------------------- |
-| Start Wash        | Command        | `Application.Common.Commands.Washing.StartWashCommand`     |
-| Add Prot          | Command        | `Application.Common.Commands.Washing.AddProtCommand`       |
-| Upload Photo      | Command        | `Application.Common.Commands.Washing.UploadPhotoCommand`   |
-| Finish Wash       | Command        | `Application.Common.Commands.Washing.FinishWashCommand`    |
+| Start Wash        | Command        | `Application.Common.Commands.WashCycle.StartWashCommand`   |
+| Add Prot          | Command        | `Application.Common.Commands.WashCycle.AddProtCommand`     |
+| Upload Photo      | Command        | `Application.Common.Commands.WashCycle.UploadPhotoCommand` |
+| Finish Wash       | Command        | `Application.Common.Commands.WashCycle.FinishWashCommand`  |
 | Get Active Washes | Query          | `Application.Common.Queries.Washing.GetActiveWashesQuery`  |
 | Get by ID         | Query          | `Application.Common.Queries.Washing.GetWashByIdQuery`      |
 

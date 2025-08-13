@@ -8,7 +8,7 @@ using System.Linq;
 using System;
 using WashingEntity = Controlmat.Domain.Entities.Washing;
 
-namespace Controlmat.Application.Common.Commands.Washing;
+namespace Controlmat.Application.Common.Commands.WashCycle;
 
 public static class StartWashCommand
 {

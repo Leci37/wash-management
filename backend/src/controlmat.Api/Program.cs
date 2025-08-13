@@ -26,7 +26,7 @@ builder.Services.AddAutoMapper(typeof(Controlmat.Application.Common.Mappings.Map
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMediatR(cfg =>
 {
-    cfg.RegisterServicesFromAssembly(typeof(Controlmat.Application.Common.Commands.Washing.StartWashCommand).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(Controlmat.Application.Common.Commands.WashCycle.StartWashCommand).Assembly);
 });
 builder.Services.AddValidatorsFromAssemblyContaining<Controlmat.Application.Common.Validators.NewWashDtoValidator>();
 builder.Services.AddApplicationServices();

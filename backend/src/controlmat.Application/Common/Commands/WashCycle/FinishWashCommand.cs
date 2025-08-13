@@ -5,7 +5,7 @@ using Controlmat.Application.Common.Dto;
 using Controlmat.Domain.Interfaces;
 using System;
 
-namespace Controlmat.Application.Common.Commands.Washing;
+namespace Controlmat.Application.Common.Commands.WashCycle;
 
 public static class FinishWashCommand
 {
