@@ -6,6 +6,7 @@ using Controlmat.Domain.Entities;
 using Controlmat.Domain.Interfaces;
 using System.Linq;
 using System;
+using WashingEntity = Controlmat.Domain.Entities.Washing;
 
 namespace Controlmat.Application.Common.Commands.Washing;
 
@@ -32,7 +33,7 @@ public static class StartWashCommand
         public async Task<WashingResponseDto> Handle(Request request, CancellationToken cancellationToken)
         {
             var dto = request.Dto;
-            var washing = new Washing
+            var washing = new WashingEntity
             {
                 MachineId = dto.MachineId,
                 StartUserId = dto.StartUserId,
