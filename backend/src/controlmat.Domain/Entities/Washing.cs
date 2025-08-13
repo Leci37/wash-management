@@ -6,7 +6,7 @@ namespace Controlmat.Domain.Entities;
 public class Washing
 {
     public long WashingId { get; set; }
-    public int MachineId { get; set; }
+    public short MachineId { get; set; }
     public int StartUserId { get; set; }
     public int? EndUserId { get; set; }
     public DateTime StartDate { get; set; }
