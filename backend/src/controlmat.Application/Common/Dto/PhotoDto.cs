@@ -8,6 +8,6 @@ public class PhotoDto
 {
     public int Id { get; set; }
     public string FileName { get; set; } = string.Empty;
-    public string FilePath { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public string DownloadUrl { get; set; } = string.Empty;
 }
