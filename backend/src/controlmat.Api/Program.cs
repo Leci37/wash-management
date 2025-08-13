@@ -2,6 +2,9 @@ using Serilog;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
+using AutoMapper;
+using MediatR;
+using FluentValidation;
 using Controlmat.Application;
 using Controlmat.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -13,7 +16,15 @@ builder.Host.UseSerilog((ctx, lc) => lc
     .WriteTo.Console()
     .Enrich.WithEnvironmentUserName());
 
-builder.Services.AddApplication();
+// Dependency registrations
+builder.Services.AddAutoMapper(typeof(Controlmat.Application.Common.Mappings.MappingProfile));
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(Controlmat.Application.Common.Commands.Washing.StartWashCommand).Assembly);
+});
+builder.Services.AddValidatorsFromAssemblyContaining<Controlmat.Application.Common.Validators.NewWashDtoValidator>();
+builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
 builder.Services.AddControllers();
