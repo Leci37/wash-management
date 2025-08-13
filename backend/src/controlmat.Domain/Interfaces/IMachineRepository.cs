@@ -7,7 +7,7 @@ namespace Controlmat.Domain.Interfaces;
 
 public interface IMachineRepository
 {
-    Task<Machine?> GetByIdAsync(int machineId);
+    Task<Machine?> GetByIdAsync(short machineId);
     Task<IEnumerable<Machine>> GetAllAsync();
 
 }

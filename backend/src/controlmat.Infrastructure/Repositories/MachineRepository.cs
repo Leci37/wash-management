@@ -16,7 +16,7 @@ namespace Controlmat.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<Machine?> GetByIdAsync(int machineId)
+        public async Task<Machine?> GetByIdAsync(short machineId)
         {
             return await _context.Machines.FindAsync(machineId);
         }
