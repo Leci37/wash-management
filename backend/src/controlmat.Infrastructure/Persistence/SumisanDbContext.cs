@@ -26,8 +26,6 @@ namespace Controlmat.Infrastructure.Persistence
                 entity.Property(e => e.UserName)
                     .IsRequired()
                     .HasMaxLength(100);
-                entity.Property(e => e.Role)
-                    .HasMaxLength(50);
             });
 
             modelBuilder.Entity<Machine>(entity =>
@@ -169,9 +167,9 @@ namespace Controlmat.Infrastructure.Persistence
             if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
             {
                 modelBuilder.Entity<User>().HasData(
-                    new User { UserId = 1, UserName = "operario1", Role = "Operator" },
-                    new User { UserId = 2, UserName = "operario2", Role = "Operator" },
-                    new User { UserId = 3, UserName = "supervisor", Role = "Supervisor" }
+                    new User { UserId = 1, UserName = "operario1" },
+                    new User { UserId = 2, UserName = "operario2" },
+                    new User { UserId = 3, UserName = "supervisor" }
                 );
             }
         }
