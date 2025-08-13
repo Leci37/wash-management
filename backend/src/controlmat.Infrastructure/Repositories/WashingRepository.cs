@@ -51,6 +51,7 @@ namespace Controlmat.Infrastructure.Repositories
                 .Include(w => w.Photos)
                 .Include(w => w.StartUser)
                 .Include(w => w.EndUser)
+                .Include(w => w.Machine)
                 .FirstOrDefaultAsync();
         }
 
