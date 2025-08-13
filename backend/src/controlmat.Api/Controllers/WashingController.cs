@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using MediatR;
 using Controlmat.Application.Common.Commands.WashCycle;
 using Controlmat.Application.Common.Queries.Washing;
-using Controlmat.Application.Common.Queries.User;
-using Controlmat.Application.Common.Queries.Machine;
 using Controlmat.Application.Common.Dto;
 using System.ComponentModel.DataAnnotations;
 
@@ -61,25 +59,6 @@ namespace Controlmat.Api.Controllers
                     Status = 409
                 });
             }
-        }
-
-        [HttpPost("lavado")]
-        [ProducesResponseType(typeof(WashingResponseDto), 200)]
-        public async Task<IActionResult> StartLavado([FromBody] LavadoDto lavado)
-        {
-            _logger.LogInformation("📝 POST /api/washing/lavado - MachineId: {MachineId}, StartUserId: {StartUserId}, ProtCount: {ProtCount}",
-                lavado.MachineId, lavado.StartUserId, lavado.Prots?.Count ?? 0);
-
-            var newWashDto = new NewWashDto
-            {
-                MachineId = lavado.MachineId,
-                StartUserId = lavado.StartUserId,
-                StartObservation = lavado.StartObservation,
-                ProtEntries = lavado.Prots
-            };
-
-            var result = await _mediator.Send(new StartWashCommand.Request { Dto = newWashDto });
-            return Ok(result);
         }
 
         /// <summary>
@@ -185,71 +164,7 @@ namespace Controlmat.Api.Controllers
             }
         }
 
-        /// <summary>
-        /// Add a PROT (instrument kit) to an active wash
-        /// </summary>
-        /// <param name="id">Washing ID</param>
-        /// <param name="dto">PROT details (ProtId, BatchNumber, BagNumber)</param>
-        /// <returns>Success confirmation</returns>
-        /// <response code="200">PROT added successfully</response>
-        /// <response code="400">Invalid PROT format</response>
-        /// <response code="404">Wash not found</response>
-        /// <response code="409">Wash already finished or duplicate PROT</response>
-        [HttpPost("{id}/prots")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(typeof(ValidationProblemDetails), 400)]
-        [ProducesResponseType(typeof(ProblemDetails), 404)]
-        [ProducesResponseType(typeof(ProblemDetails), 409)]
-        public async Task<IActionResult> AddProt([Required] long id, [FromBody] AddProtDto dto)
-        {
-            _logger.LogInformation("📝 POST /api/washing/{WashingId}/prots - ProtId: {ProtId}, BatchNumber: {BatchNumber}, BagNumber: {BagNumber}", 
-                id, dto.ProtId, dto.BatchNumber, dto.BagNumber);
 
-            // Override WashingId from route
-            dto.WashingId = id;
-
-            try
-            {
-                await _mediator.Send(new AddProtCommand.Request { WashingId = id, Dto = dto });
-                return Ok();
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning("⚠️ Business rule violation: {Message}", ex.Message);
-                
-                if (ex.Message.Contains("not found"))
-                    return NotFound(new ProblemDetails { Title = "Wash Not Found", Detail = ex.Message, Status = 404 });
-                    
-                if (ex.Message.Contains("finished"))
-                    return Conflict(new ProblemDetails { Title = "Wash Already Finished", Detail = ex.Message, Status = 409 });
-                    
-                if (ex.Message.Contains("already exists"))
-                    return Conflict(new ProblemDetails { Title = "Duplicate PROT", Detail = ex.Message, Status = 409 });
-                    
-                return BadRequest(new ProblemDetails { Title = "Add PROT Error", Detail = ex.Message, Status = 400 });
-            }
-        }
-
-        /// <summary>
-        /// Get all active wash cycles (max 2)
-        /// </summary>
-        /// <returns>List of active washes with basic details</returns>
-        /// <response code="200">Success - returns 0-2 active washes</response>
-        [HttpGet("active")]
-        [ProducesResponseType(typeof(List<ActiveWashDto>), 200)]
-        public async Task<IActionResult> GetActiveWashes()
-        {
-            _logger.LogInformation("📝 GET /api/washing/active");
-
-            var result = await _mediator.Send(new GetActiveWashesQuery.Request());
-            return Ok(result);
-        }
-
-        [HttpGet("by-machine/{machineId}")]
-        public async Task<IActionResult> GetByMachine(int machineId)
-            => Ok(await _mediator.Send(new GetWashByMachineQuery.Request(machineId)));
-
-        /// <summary>
         /// Get detailed wash information by ID
         /// </summary>
         /// <param name="id">Washing ID</param>
