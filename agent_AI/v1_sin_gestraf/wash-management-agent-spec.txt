@@ -3,11 +3,11 @@ Entity Framework Core Models
 To fulfill the functional specification, we define the following EF Core entity models (with code-first approach for migrations
 learn.microsoft.com
 ):
-User – Represents a warehouse user who can start/finish washes. Fields: UserId (int primary key), UserName (string), Role.
+User – Represents a warehouse user who can start/finish washes. Fields: UserId (int primary key), UserName (string).
 Machine – Washing machine identifier. Fields: Id (smallint PK) and Name (string up to 50 chars). There are two machines (Machine 1 and 2), and at most one active wash per machine is allowed at a time (enforcing max two concurrent washes total).
 Washing – Represents a wash process record. Key fields:
 WashingId (long/string) – a unique ID in the format YYMMDDXX (date + two-digit sequence). This can be generated when a new wash is started.
-Machine (int) – Machine number (1 or 2) used for the wash.
+Machine (short) – Machine number (1 or 2) used for the wash.
 StartDate/EndDate (DateTime) – Timestamps for when the wash was started and finished.
 StartUserId/EndUserId (int) – References to the User who started and who finished the wash.
 Status (char) – Status of the wash: 'P' for In Progress or 'F' for Finished.
@@ -26,7 +26,7 @@ medium.com
 medium.com
 . Key DTOs include:
 NewWashDTO – used when starting a new wash. Contains necessary info to initiate a wash:
-MachineId (int) – which machine to use.
+MachineId (short) – which machine to use.
 StartUserId (int) – the user starting the wash.
 ProtEntries – a list of prot items (each with ProtId, BatchNumber, BagNumber) to be included in this wash.
 StartObservation (string, optional) – any starting observations.

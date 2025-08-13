@@ -2,19 +2,35 @@ using Serilog;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
-using controlmat.Application;
-using controlmat.Infrastructure;
+using System.IO;
+using AutoMapper;
+using MediatR;
+using FluentValidation;
+using Controlmat.Application;
+using Controlmat.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Ensure the log directory exists
+Directory.CreateDirectory("Logs");
+
 builder.Host.UseSerilog((ctx, lc) => lc
     .WriteTo.Console()
+    .WriteTo.File("Logs/controlmat-.log", rollingInterval: RollingInterval.Day)
     .Enrich.WithEnvironmentUserName());
 
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+// Dependency registrations
+builder.Services.AddAutoMapper(typeof(Controlmat.Application.Common.Mappings.MappingProfile));
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(Controlmat.Application.Common.Commands.Washing.StartWashCommand).Assembly);
+});
+builder.Services.AddValidatorsFromAssemblyContaining<Controlmat.Application.Common.Validators.NewWashDtoValidator>();
+builder.Services.AddApplicationServices();
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

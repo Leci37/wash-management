@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using controlmat.Domain.Entities;
+using Controlmat.Domain.Entities;
+using Controlmat.Infrastructure.Configurations;
 
-namespace controlmat.Infrastructure.Persistence;
+namespace Controlmat.Infrastructure.Persistence;
 
 public class ControlmatDbContext : DbContext
 {
@@ -17,10 +18,36 @@ public class ControlmatDbContext : DbContext
     public DbSet<Photo> Photos => Set<Photo>();
     public DbSet<Parameter> Parameters => Set<Parameter>();
 
+
+    public DbSet<Parameter> Parameters => Set<Parameter>();
+
+    public DbSet<Machine> Machines => Set<Machine>();
+
+
+    public DbSet<Photo> Photos => Set<Photo>();
+
+    public DbSet<Prot> Prots => Set<Prot>();
+
+    public DbSet<Washing> Washings => Set<Washing>();
+
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ControlmatDbContext).Assembly);
-        base.OnModelCreating(modelBuilder);
+
+
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
+
+        modelBuilder.ApplyConfiguration(new ParameterConfiguration());
+
+
+        modelBuilder.ApplyConfiguration(new PhotoConfiguration());
+
+
+        modelBuilder.ApplyConfiguration(new ProtConfiguration());
+
+        modelBuilder.ApplyConfiguration(new WashingConfiguration());
+
     }
 }
 

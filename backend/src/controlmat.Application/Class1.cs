@@ -1,4 +1,4 @@
-﻿namespace controlmat.Application
+﻿namespace Controlmat.Application
 {
     public class Class1
     {

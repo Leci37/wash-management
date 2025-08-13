@@ -1,4 +1,4 @@
-﻿namespace controlmat.Infrastructure
+﻿namespace Controlmat.Infrastructure
 {
     public class Class1
     {

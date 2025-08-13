@@ -19,7 +19,7 @@ controlmat/
 
 ## 📌 Domain Models (controlmat.Domain.Entities)
 
-* `User`: UserId, UserName, Role (local user records for business operations)
+* `User`: UserId, UserName (local user records for business operations)
 * `Machine`: Id, Name
 * `Washing`: WashingId (YYMMDDXX), MachineId, Start/End Timestamps, UserIds, Status ('P' or 'F'), Observations
 * `Prot`: WashingId FK, ProtId, BatchNumber, BagNumber
