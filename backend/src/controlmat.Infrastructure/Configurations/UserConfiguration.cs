@@ -12,5 +12,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(x => x.UserId);
         builder.Property(x => x.UserId).ValueGeneratedOnAdd();
         builder.Property(x => x.UserName).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.IsActive).IsRequired().HasDefaultValue(true);
     }
 }

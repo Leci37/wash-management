@@ -29,5 +29,13 @@ namespace Controlmat.Infrastructure.Repositories
             await _context.Prots.AddAsync(prot);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<List<string>> GetActiveProtIdsAsync()
+        {
+            return await _context.Prots
+                .Where(p => p.Washing.Status == 'P')
+                .Select(p => p.ProtId)
+                .ToListAsync();
+        }
     }
 }

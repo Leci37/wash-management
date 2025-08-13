@@ -26,6 +26,9 @@ namespace Controlmat.Infrastructure.Persistence
                 entity.Property(e => e.UserName)
                     .IsRequired()
                     .HasMaxLength(100);
+                entity.Property(e => e.IsActive)
+                    .IsRequired()
+                    .HasDefaultValue(true);
             });
 
             modelBuilder.Entity<Machine>(entity =>
@@ -172,9 +175,9 @@ namespace Controlmat.Infrastructure.Persistence
             if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
             {
                 modelBuilder.Entity<User>().HasData(
-                    new User { UserId = 1, UserName = "operario1" },
-                    new User { UserId = 2, UserName = "operario2" },
-                    new User { UserId = 3, UserName = "supervisor" }
+                    new User { UserId = 1, UserName = "operario1", IsActive = true },
+                    new User { UserId = 2, UserName = "operario2", IsActive = true },
+                    new User { UserId = 3, UserName = "supervisor", IsActive = true }
                 );
             }
         }

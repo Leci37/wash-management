@@ -40,6 +40,21 @@ public static class FinishWashCommand
                 if (washing.Status == 'F')
                     throw new InvalidOperationException($"Washing {request.WashingId} already finished");
 
+                // Validate StartUser != EndUser
+                if (washing.StartUserId == request.Dto.EndUserId)
+                {
+                    _logger.LogWarning("Same user trying to start and finish wash: {UserId}", request.Dto.EndUserId);
+                    throw new InvalidOperationException("The user who finishes the wash must be different from the user who started it");
+                }
+
+                // Check wash duration limits
+                var washDuration = DateTime.UtcNow - washing.StartDate;
+                if (washDuration < TimeSpan.FromSeconds(1))
+                {
+                    _logger.LogWarning("Wash too short: {Duration} seconds", washDuration.TotalSeconds);
+                    throw new InvalidOperationException("Wash cycle must run for at least 1 second");
+                }
+
                 washing.EndUserId = request.Dto.EndUserId;
                 washing.FinishObservation = request.Dto.FinishObservation;
                 washing.EndDate = DateTime.UtcNow;

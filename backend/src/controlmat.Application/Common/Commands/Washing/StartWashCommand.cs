@@ -20,12 +20,21 @@ public static class StartWashCommand
     public class Handler : IRequestHandler<Request, WashingResponseDto>
     {
         private readonly IWashingRepository _washingRepo;
+        private readonly IUserRepository _userRepo;
+        private readonly IProtRepository _protRepo;
         private readonly IMapper _mapper;
         private readonly ILogger<Handler> _logger;
 
-        public Handler(IWashingRepository washingRepo, IMapper mapper, ILogger<Handler> logger)
+        public Handler(
+            IWashingRepository washingRepo,
+            IUserRepository userRepo,
+            IProtRepository protRepo,
+            IMapper mapper,
+            ILogger<Handler> logger)
         {
             _washingRepo = washingRepo;
+            _userRepo = userRepo;
+            _protRepo = protRepo;
             _mapper = mapper;
             _logger = logger;
         }
@@ -36,6 +45,32 @@ public static class StartWashCommand
             {
                 var dto = request.Dto;
                 _logger.LogInformation("Starting wash: MachineId={MachineId}, StartUserId={StartUserId}", dto.MachineId, dto.StartUserId);
+
+                // Validate StartUser exists and is active
+                var startUser = await _userRepo.GetByIdAsync(dto.StartUserId);
+                if (startUser == null)
+                {
+                    _logger.LogWarning("StartUser not found: {UserId}", dto.StartUserId);
+                    throw new InvalidOperationException($"Start user {dto.StartUserId} not found");
+                }
+                if (!startUser.IsActive)
+                {
+                    _logger.LogWarning("StartUser inactive: {UserId}", dto.StartUserId);
+                    throw new InvalidOperationException($"Start user {dto.StartUserId} is inactive");
+                }
+
+                // Check for duplicate PROTs across active washes
+                var existingProts = await _protRepo.GetActiveProtIdsAsync();
+                var duplicateProts = dto.ProtEntries
+                    .Where(p => existingProts.Contains(p.ProtId))
+                    .Select(p => p.ProtId)
+                    .ToList();
+
+                if (duplicateProts.Any())
+                {
+                    _logger.LogWarning("Duplicate PROTs detected: {ProtIds}", duplicateProts);
+                    throw new InvalidOperationException($"PROTs already in use: {string.Join(", ", duplicateProts)}");
+                }
 
                 var washing = new WashingEntity
                 {
