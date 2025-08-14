@@ -2,8 +2,8 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Controlmat.Application.Common.Dto;
 using Controlmat.Application.Common.Constants;
+using Controlmat.Application.Common.Exceptions;
 using Controlmat.Domain.Interfaces;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 
 namespace Controlmat.Application.Common.Queries.Photo;
@@ -14,12 +14,15 @@ public static class DownloadSinglePhotoQuery
 
     public class Handler : IRequestHandler<Request, PhotoDownloadDto>
     {
-        private readonly IPhotoRepository _repository;
+        private readonly IPhotoRepository _photoRepository;
+        private readonly IParameterRepository _parameterRepository;
         private readonly ILogger<Handler> _logger;
+        private string _imagePath = "C\\SumiSan\\Photos";
 
-        public Handler(IPhotoRepository repository, ILogger<Handler> logger)
+        public Handler(IPhotoRepository photoRepository, IParameterRepository parameterRepository, ILogger<Handler> logger)
         {
-            _repository = repository;
+            _photoRepository = photoRepository;
+            _parameterRepository = parameterRepository;
             _logger = logger;
         }
 
@@ -27,36 +30,36 @@ public static class DownloadSinglePhotoQuery
         {
             _logger.LogInformation("🌀 DownloadSinglePhotoQuery - STARTED. PhotoId: {PhotoId}", request.PhotoId);
 
-            if (!await _repository.ExistsAsync(request.PhotoId))
-            {
-                _logger.LogWarning("⚠️ Photo not found: {PhotoId}", request.PhotoId);
-                throw new ValidationException(ValidationErrorMessages.Photo.NotFound(request.PhotoId));
-            }
+            _imagePath = await _parameterRepository.GetValueAsync("ImagePath") ?? _imagePath;
 
-            var photo = await _repository.GetByIdAsync(request.PhotoId);
+            // Validate photo exists in database
+            var photo = await _photoRepository.GetByIdAsync(request.PhotoId);
             if (photo == null)
             {
-                _logger.LogWarning("⚠️ Photo not found after existence check: {PhotoId}", request.PhotoId);
-                throw new ValidationException(ValidationErrorMessages.Photo.NotFound(request.PhotoId));
+                _logger.LogWarning("⚠️ Photo not found in database: {PhotoId}", request.PhotoId);
+                throw new NotFoundException(ValidationErrorMessages.Photo.NotFound(request.PhotoId));
             }
 
-            if (!File.Exists(photo.FilePath))
+            // Validate physical file exists
+            var fullPath = Path.Combine(_imagePath, photo.FileName);
+            if (!File.Exists(fullPath))
             {
-                _logger.LogError("❌ Photo file not found on disk: {FilePath}", photo.FilePath);
-                throw new ValidationException(ValidationErrorMessages.Photo.FileNotFound(photo.FileName));
+                _logger.LogWarning("⚠️ Photo file not found on disk: {FileName}", photo.FileName);
+                throw new NotFoundException(ValidationErrorMessages.Photo.FileNotFound(photo.FileName));
             }
 
-            byte[] fileBytes;
+            // Check file accessibility
             try
             {
-                fileBytes = await File.ReadAllBytesAsync(photo.FilePath, ct);
+                using var fileStream = File.OpenRead(fullPath);
             }
             catch (UnauthorizedAccessException)
             {
-                _logger.LogError("❌ Access denied to photo file: {FilePath}", photo.FilePath);
-                throw new ValidationException(ValidationErrorMessages.Photo.FileAccessDenied(photo.FileName));
+                _logger.LogWarning("⚠️ File access denied: {FileName}", photo.FileName);
+                throw new UnauthorizedAccessException(ValidationErrorMessages.Photo.FileAccessDenied(photo.FileName));
             }
 
+            var fileBytes = await File.ReadAllBytesAsync(fullPath, ct);
             var contentType = Path.GetExtension(photo.FileName).ToLower() switch
             {
                 ".jpg" or ".jpeg" => "image/jpeg",

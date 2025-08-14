@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using Controlmat.Application.Common.Constants;
 using Controlmat.Application.Common.Dto;
+using Controlmat.Application.Common.Exceptions;
 using Controlmat.Domain.Interfaces;
 using System.IO;
 using System.IO.Compression;
@@ -18,12 +19,15 @@ public static class DownloadWashPhotosQuery
     {
         private readonly IPhotoRepository _photoRepository;
         private readonly IWashingRepository _washingRepository;
+        private readonly IParameterRepository _parameterRepository;
         private readonly ILogger<Handler> _logger;
+        private string _imagePath = "C\\SumiSan\\Photos";
 
-        public Handler(IPhotoRepository photoRepository, IWashingRepository washingRepository, ILogger<Handler> logger)
+        public Handler(IPhotoRepository photoRepository, IWashingRepository washingRepository, IParameterRepository parameterRepository, ILogger<Handler> logger)
         {
             _photoRepository = photoRepository;
             _washingRepository = washingRepository;
+            _parameterRepository = parameterRepository;
             _logger = logger;
         }
 
@@ -49,12 +53,18 @@ public static class DownloadWashPhotosQuery
                 throw new ValidationException(ValidationErrorMessages.Photo.NoPhotosForWash(request.WashId));
             }
 
+            _imagePath = await _parameterRepository.GetValueAsync("ImagePath") ?? _imagePath;
+
             var photos = await _photoRepository.GetByWashingIdAsync(request.WashId);
+
+            // Validate all photo files exist before creating ZIP
             foreach (var photo in photos)
             {
-                if (!File.Exists(photo.FilePath))
+                var fullPath = Path.Combine(_imagePath, photo.FileName);
+                if (!File.Exists(fullPath))
                 {
-                    throw new ValidationException(ValidationErrorMessages.Photo.FileNotFound(photo.FileName));
+                    _logger.LogWarning("⚠️ Photo file missing for ZIP: {FileName}", photo.FileName);
+                    throw new NotFoundException(ValidationErrorMessages.Photo.FileNotFound(photo.FileName));
                 }
             }
 
@@ -63,9 +73,10 @@ public static class DownloadWashPhotosQuery
             {
                 foreach (var photo in photos)
                 {
+                    var fullPath = Path.Combine(_imagePath, photo.FileName);
                     var entry = archive.CreateEntry(photo.FileName);
                     using var entryStream = entry.Open();
-                    using var fileStream = File.OpenRead(photo.FilePath);
+                    using var fileStream = File.OpenRead(fullPath);
                     await fileStream.CopyToAsync(entryStream, ct);
                 }
             }
