@@ -1,7 +1,11 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Controlmat.Application.Common.Constants;
 using Controlmat.Application.Common.Dto;
 using Controlmat.Domain.Interfaces;
+using System.Text.RegularExpressions;
+using System.Globalization;
+using System;
 
 namespace Controlmat.Application.Common.Queries.Washing;
 
@@ -11,20 +15,30 @@ public static class GetWashPhotosQuery
 
     public class Handler : IRequestHandler<Request, List<PhotoDto>>
     {
-        private readonly IPhotoRepository _repository;
+        private readonly IPhotoRepository _photoRepo;
+        private readonly IWashingRepository _washingRepo;
         private readonly ILogger<Handler> _logger;
 
-        public Handler(IPhotoRepository repository, ILogger<Handler> logger)
+        public Handler(IPhotoRepository photoRepo, IWashingRepository washingRepo, ILogger<Handler> logger)
         {
-            _repository = repository;
+            _photoRepo = photoRepo;
+            _washingRepo = washingRepo;
             _logger = logger;
         }
 
         public async Task<List<PhotoDto>> Handle(Request request, CancellationToken ct)
         {
-            _logger.LogInformation("🌀 GetWashPhotosQuery - STARTED. WashId: {WashId}", request.WashId);
-            
-            var photos = await _repository.GetByWashingIdAsync(request.WashId);
+            var washingId = request.WashId;
+            _logger.LogInformation("🌀 GetWashPhotosQuery - STARTED. WashId: {WashId}", washingId);
+
+            if (!IsValidWashingId(washingId))
+                throw new ArgumentException(ValidationErrorMessages.Washing.InvalidIdFormat(washingId));
+
+            var washing = await _washingRepo.GetByIdAsync(washingId);
+            if (washing == null)
+                throw new InvalidOperationException(ValidationErrorMessages.Washing.NotFound(washingId));
+
+            var photos = await _photoRepo.GetByWashingIdAsync(washingId);
             var result = photos.Select(p => new PhotoDto
             {
                 Id = p.Id,
@@ -35,6 +49,14 @@ public static class GetWashPhotosQuery
 
             _logger.LogInformation("✅ GetWashPhotosQuery - COMPLETED. Found {Count} photos", result.Count);
             return result;
+        }
+
+        private static bool IsValidWashingId(long washingId)
+        {
+            var idStr = washingId.ToString();
+            if (!Regex.IsMatch(idStr, @"^\d{8}$"))
+                return false;
+            return DateTime.TryParseExact(idStr[..6], "yyMMdd", null, DateTimeStyles.None, out _);
         }
     }
 }
