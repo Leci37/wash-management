@@ -57,7 +57,11 @@ public static class AddProtCommand
                     throw new ValidationException(ValidationErrorMessages.Washing.NotFound(washingId));
 
                 if (washing.Status != 'P')
-                    throw new ConflictException(ValidationErrorMessages.Washing.AlreadyFinished(washingId));
+                {
+                    _logger.LogWarning("⚠️ Cannot modify washing with status '{Status}': {WashingId}",
+                        washing.Status, washingId);
+                    throw new ConflictException(ValidationErrorMessages.Washing.CannotModifyFinished(washingId));
+                }
 
                 if (!Regex.IsMatch(dto.ProtId, @"^PROT[0-9]{3}$"))
                     throw new ValidationException(ValidationErrorMessages.Prot.InvalidProtIdFormat(dto.ProtId));
