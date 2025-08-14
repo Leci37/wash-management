@@ -6,8 +6,10 @@ using System;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 using Controlmat.Application.Common.Constants;
 using Controlmat.Application.Common.Dto;
+using Controlmat.Application.Common.Exceptions;
 using Controlmat.Domain.Entities;
 using Controlmat.Domain.Interfaces;
 
@@ -48,26 +50,26 @@ public static class AddProtCommand
                 _logger.LogInformation("Adding PROT {ProtId} to wash {WashingId}", dto.ProtId, washingId);
 
                 if (!IsValidWashingId(washingId))
-                    throw new ArgumentException(ValidationErrorMessages.Washing.InvalidIdFormat(washingId));
+                    throw new ValidationException(ValidationErrorMessages.Washing.InvalidIdFormat(washingId));
 
                 var washing = await _washingRepo.GetByIdAsync(washingId);
                 if (washing == null)
-                    throw new InvalidOperationException(ValidationErrorMessages.Washing.NotFound(washingId));
+                    throw new ValidationException(ValidationErrorMessages.Washing.NotFound(washingId));
 
                 if (washing.Status != 'P')
-                    throw new InvalidOperationException(ValidationErrorMessages.Washing.AlreadyFinished(washingId));
+                    throw new ConflictException(ValidationErrorMessages.Washing.AlreadyFinished(washingId));
 
                 if (!Regex.IsMatch(dto.ProtId, @"^PROT[0-9]{3}$"))
-                    throw new ArgumentException(ValidationErrorMessages.Prot.InvalidProtIdFormat(dto.ProtId));
+                    throw new ValidationException(ValidationErrorMessages.Prot.InvalidProtIdFormat(dto.ProtId));
 
                 if (!Regex.IsMatch(dto.BatchNumber, @"^NL[0-9]{2}$"))
-                    throw new ArgumentException(ValidationErrorMessages.Prot.InvalidBatchNumberFormat(dto.BatchNumber));
+                    throw new ValidationException(ValidationErrorMessages.Prot.InvalidBatchNumberFormat(dto.BatchNumber));
 
                 if (!Regex.IsMatch(dto.BagNumber, @"^[0-9]{2}/[0-9]{2}$"))
-                    throw new ArgumentException(ValidationErrorMessages.Prot.InvalidBagNumberFormat(dto.BagNumber));
+                    throw new ValidationException(ValidationErrorMessages.Prot.InvalidBagNumberFormat(dto.BagNumber));
 
                 if (await _protRepo.ExistsInWashAsync(washingId, dto.ProtId, dto.BatchNumber, dto.BagNumber))
-                    throw new InvalidOperationException(ValidationErrorMessages.Prot.DuplicateProtInWash(dto.ProtId, dto.BatchNumber, dto.BagNumber));
+                    throw new ConflictException(ValidationErrorMessages.Prot.DuplicateProtInWash(dto.ProtId, dto.BatchNumber, dto.BagNumber));
 
                 var prot = _mapper.Map<Prot>(dto);
                 prot.WashingId = washingId;
