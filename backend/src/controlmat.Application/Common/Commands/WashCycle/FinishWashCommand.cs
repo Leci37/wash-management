@@ -44,6 +44,8 @@ public static class FinishWashCommand
 
         public async Task<WashingResponseDto> Handle(Request request, CancellationToken cancellationToken)
         {
+            var function = nameof(Handle);
+
             try
             {
                 _logger.LogInformation("Finishing wash {WashingId} by user {EndUserId}", request.WashingId, request.Dto.EndUserId);
@@ -74,8 +76,11 @@ public static class FinishWashCommand
                     throw new ConflictException(ValidationErrorMessages.Washing.InvalidStatusTransition(washing.Status, 'F'));
                 }
 
-                if (!await _userRepo.ExistsAsync(request.Dto.EndUserId))
+                // Validate end user exists in database
+                var endUserExists = await _userRepo.ExistsAsync(request.Dto.EndUserId);
+                if (!endUserExists)
                 {
+                    _logger.LogWarning("⚠️ {Function} - End user not found: {EndUserId}", function, request.Dto.EndUserId);
                     throw new ValidationException(ValidationErrorMessages.User.EndUserNotFound(request.Dto.EndUserId));
                 }
 
