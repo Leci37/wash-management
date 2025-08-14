@@ -17,10 +17,7 @@ public class PhotosController : ControllerBase
     [HttpGet("{photoId}/download")]
     public async Task<IActionResult> DownloadPhoto(int photoId)
     {
-        var result = await _mediator.Send(new DownloadPhotoQuery.Request(photoId));
-        if (result == null)
-            return NotFound();
-
+        var result = await _mediator.Send(new DownloadSinglePhotoQuery.Request(photoId));
         return File(result.FileBytes, result.ContentType, result.FileName);
     }
 }
