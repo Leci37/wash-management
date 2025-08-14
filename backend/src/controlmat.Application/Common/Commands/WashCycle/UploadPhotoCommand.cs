@@ -7,6 +7,7 @@ using Controlmat.Domain.Entities;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Controlmat.Application.Common.Constants;
+using Controlmat.Application.Common.Exceptions;
 
 namespace Controlmat.Application.Common.Commands.WashCycle;
 
@@ -86,7 +87,11 @@ public static class UploadPhotoCommand
                     throw new InvalidOperationException(ValidationErrorMessages.Washing.NotFound(washingId));
 
                 if (washing.Status != 'P')
-                    throw new InvalidOperationException(ValidationErrorMessages.Washing.AlreadyFinished(washingId));
+                {
+                    _logger.LogWarning("⚠️ Cannot modify washing with status '{Status}': {WashingId}",
+                        washing.Status, washingId);
+                    throw new ConflictException(ValidationErrorMessages.Washing.CannotModifyFinished(washingId));
+                }
 
                 var currentPhotoCount = await _photoRepo.CountByWashingIdAsync(washingId);
                 if (currentPhotoCount >= MaxPhotosPerWash)
@@ -138,6 +143,12 @@ public static class UploadPhotoCommand
                 throw;
             }
             catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "⚠️ {Function} [Thread:{ThreadId}] - BUSINESS RULE VIOLATION. WashingId: {WashingId}",
+                    function, threadId, washingId);
+                throw;
+            }
+            catch (ConflictException ex)
             {
                 _logger.LogWarning(ex, "⚠️ {Function} [Thread:{ThreadId}] - BUSINESS RULE VIOLATION. WashingId: {WashingId}",
                     function, threadId, washingId);
