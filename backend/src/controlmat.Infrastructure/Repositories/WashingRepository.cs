@@ -57,12 +57,19 @@ namespace Controlmat.Infrastructure.Repositories
 
         public async Task<int> CountActiveAsync()
         {
-            return await _context.Washings.CountAsync(w => w.Status != 'F');
+            return await _context.Washings.CountAsync(w => w.Status == 'P');
         }
 
-        public async Task<bool> IsMachineInUseAsync(short machineId)
+        public async Task<bool> IsMachineInUseAsync(int machineId)
         {
-            return await _context.Washings.AnyAsync(w => w.MachineId == machineId && w.Status != 'F');
+            return await _context.Washings.AnyAsync(w => w.MachineId == machineId && w.Status == 'P');
+        }
+
+        public async Task<List<Washing>> GetActiveWashesByMachineAsync(int machineId)
+        {
+            return await _context.Washings
+                .Where(w => w.MachineId == machineId && w.Status == 'P')
+                .ToListAsync();
         }
 
         public async Task<long?> GetMaxWashingIdByDateAsync(DateTime date)
