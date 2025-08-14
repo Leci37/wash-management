@@ -39,6 +39,10 @@ public static class StartWashCommand
                 _logger.LogInformation("Starting wash: MachineId={MachineId}, StartUserId={StartUserId}", dto.MachineId, dto.StartUserId);
                 var washingId = await GenerateWashingIdAsync();
 
+                // Generate proper WashingId in YYMMDDXX format
+                var washingId = await GenerateWashingIdAsync();
+                _logger.LogInformation("📋 Generated WashingId: {WashingId}", washingId);
+
                 var washing = new WashingEntity
                 {
                     WashingId = washingId,
@@ -66,6 +70,7 @@ public static class StartWashCommand
                 throw;
             }
         }
+
 
         /// <summary>
         /// Generates a unique WashingId in YYMMDDXX format
@@ -109,6 +114,7 @@ public static class StartWashCommand
             }
 
             return washingId;
+
         }
     }
 }
