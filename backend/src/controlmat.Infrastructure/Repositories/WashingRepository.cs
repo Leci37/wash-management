@@ -34,11 +34,25 @@ namespace Controlmat.Infrastructure.Repositories
                 .FirstOrDefaultAsync(w => w.WashingId == id);
         }
 
-        public async Task<IEnumerable<Washing>> GetActiveWashesAsync()
+        public async Task<List<Washing>> GetActiveWashesAsync()
         {
             return await _context.Washings
-                .Where(w => w.Status != 'F')
+                .Where(w => w.Status == 'P')
+                .Include(w => w.StartUser)
+                .Include(w => w.Machine)
                 .ToListAsync();
+        }
+
+        public async Task<Washing?> GetActiveWashByMachineAsync(int machineId)
+        {
+            return await _context.Washings
+                .Where(w => w.MachineId == machineId && w.Status == 'P')
+                .Include(w => w.Prots)
+                .Include(w => w.Photos)
+                .Include(w => w.StartUser)
+                .Include(w => w.EndUser)
+                .Include(w => w.Machine)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<int> CountActiveAsync()
@@ -69,6 +83,29 @@ namespace Controlmat.Infrastructure.Repositories
         {
             _context.Washings.Update(washing);
             await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Gets all WashingIds that start with the given date prefix (YYMMDD)
+        /// Used for generating sequential WashingIds within a day
+        /// </summary>
+        public async Task<IEnumerable<long>> GetWashingIdsByDatePrefixAsync(string datePrefix)
+        {
+            if (string.IsNullOrEmpty(datePrefix) || datePrefix.Length != 6)
+            {
+                throw new ArgumentException("Date prefix must be 6 characters in YYMMDD format", nameof(datePrefix));
+            }
+
+            // Parse the date prefix to get the range
+            var prefixAsLong = long.Parse(datePrefix) * 100; // e.g., 250813 -> 25081300
+            var rangeStart = prefixAsLong;                    // 25081300
+            var rangeEnd = prefixAsLong + 99;                 // 25081399
+
+            return await _context.Washings
+                .Where(w => w.WashingId >= rangeStart && w.WashingId <= rangeEnd)
+                .Select(w => w.WashingId)
+                .OrderBy(id => id)
+                .ToListAsync();
         }
     }
 }

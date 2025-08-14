@@ -2,6 +2,7 @@ using AutoMapper;
 using Controlmat.Application.Common.Dto;
 using Controlmat.Domain.Entities;
 
+
 namespace Controlmat.Application.Common.Mappings;
 
 public class MappingProfile : Profile
@@ -16,10 +17,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.StatusDescription, opt => opt.MapFrom(src => src.Status == 'P' ? "En Progreso" : "Finalizado"));
 
         CreateMap<Washing, ActiveWashDto>()
-            .ForMember(dest => dest.MachineName, opt => opt.MapFrom(src => src.Machine.Name))
-            .ForMember(dest => dest.StartUserName, opt => opt.MapFrom(src => src.StartUser.UserName))
-            .ForMember(dest => dest.ProtCount, opt => opt.MapFrom(src => src.Prots.Count))
-            .ForMember(dest => dest.PhotoCount, opt => opt.MapFrom(src => src.Photos.Count));
+            .ForMember(dest => dest.StartUserName, opt => opt.MapFrom(src => src.StartUser.UserName));
 
         CreateMap<Prot, ProtDto>();
         CreateMap<ProtDto, Prot>()
@@ -27,10 +25,18 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.WashingId, opt => opt.Ignore())
             .ForMember(dest => dest.Washing, opt => opt.Ignore());
 
-        CreateMap<Photo, PhotoDto>();
+        CreateMap<Photo, PhotoDto>()
+            .ForMember(dest => dest.DownloadUrl, opt => opt.MapFrom(src => $"/api/photos/{src.Id}/download"));
+        CreateMap<Photo, PhotoDownloadDto>()
+            .ForMember(dest => dest.FileBytes, opt => opt.Ignore())
+            .ForMember(dest => dest.ContentType, opt => opt.Ignore());
         CreateMap<User, UserDto>();
 
         CreateMap<Machine, MachineDto>()
             .ForMember(dest => dest.IsAvailable, opt => opt.Ignore());
+
+        CreateMap<Washing, WashPhotosZipDto>()
+            .ForMember(dest => dest.ZipBytes, opt => opt.Ignore());
+
     }
 }

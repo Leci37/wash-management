@@ -29,5 +29,14 @@ namespace Controlmat.Infrastructure.Repositories
             await _context.Prots.AddAsync(prot);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<bool> ExistsInWashAsync(long washingId, string protId, string batchNumber, string bagNumber)
+        {
+            return await _context.Prots.AnyAsync(p =>
+                p.WashingId == washingId &&
+                p.ProtId == protId &&
+                p.BatchNumber == batchNumber &&
+                p.BagNumber == bagNumber);
+        }
     }
 }

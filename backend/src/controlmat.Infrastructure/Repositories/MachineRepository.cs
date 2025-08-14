@@ -25,5 +25,10 @@ namespace Controlmat.Infrastructure.Repositories
         {
             return await _context.Machines.ToListAsync();
         }
+
+        public async Task<bool> ExistsAsync(int machineId)
+        {
+            return await _context.Machines.AnyAsync(m => m.Id == machineId);
+        }
     }
 }
