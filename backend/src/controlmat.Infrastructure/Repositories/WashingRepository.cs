@@ -73,6 +73,17 @@ namespace Controlmat.Infrastructure.Repositories
                 .MaxAsync();
         }
 
+        public async Task<List<long>> GetWashingIdsByDatePrefixAsync(string datePrefix)
+        {
+            var start = long.Parse(datePrefix) * 100;
+            var end = start + 99;
+
+            return await _context.Washings
+                .Where(w => w.WashingId >= start && w.WashingId <= end)
+                .Select(w => w.WashingId)
+                .ToListAsync();
+        }
+
         public async Task AddAsync(Washing washing)
         {
             await _context.Washings.AddAsync(washing);

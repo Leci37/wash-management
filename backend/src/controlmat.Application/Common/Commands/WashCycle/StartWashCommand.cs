@@ -6,6 +6,7 @@ using Controlmat.Domain.Entities;
 using Controlmat.Domain.Interfaces;
 using System.Linq;
 using System;
+using System.Threading.Tasks;
 using WashingEntity = Controlmat.Domain.Entities.Washing;
 
 namespace Controlmat.Application.Common.Commands.WashCycle;
@@ -36,9 +37,11 @@ public static class StartWashCommand
             {
                 var dto = request.Dto;
                 _logger.LogInformation("Starting wash: MachineId={MachineId}, StartUserId={StartUserId}", dto.MachineId, dto.StartUserId);
+                var washingId = await GenerateWashingIdAsync();
 
                 var washing = new WashingEntity
                 {
+                    WashingId = washingId,
                     MachineId = dto.MachineId,
                     StartUserId = dto.StartUserId,
                     StartDate = DateTime.UtcNow,
@@ -62,6 +65,50 @@ public static class StartWashCommand
                 _logger.LogError(ex, "Error starting wash");
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Generates a unique WashingId in YYMMDDXX format
+        /// Where XX is a sequential number for the day (01, 02, 03...)
+        /// </summary>
+        private async Task<long> GenerateWashingIdAsync()
+        {
+            var today = DateTime.UtcNow;
+            var datePrefix = today.ToString("yyMMdd"); // e.g., "250813"
+
+            // Find the highest existing ID for today
+            var existingIds = await _washingRepo.GetWashingIdsByDatePrefixAsync(datePrefix);
+
+            var nextSequence = 1;
+            if (existingIds.Any())
+            {
+                // Extract the XX part and find the next sequence
+                var sequences = existingIds
+                    .Select(id => id % 100) // Get last 2 digits
+                    .Where(seq => seq > 0)  // Ignore invalid sequences
+                    .ToList();
+
+                if (sequences.Any())
+                {
+                    nextSequence = sequences.Max() + 1;
+                }
+            }
+
+            // Ensure sequence doesn't exceed 99
+            if (nextSequence > 99)
+            {
+                throw new InvalidOperationException($"Maximum washes per day (99) exceeded for {today:yyyy-MM-dd}");
+            }
+
+            // Combine date prefix + sequence
+            var washingIdString = $"{datePrefix}{nextSequence:D2}";
+
+            if (!long.TryParse(washingIdString, out var washingId))
+            {
+                throw new InvalidOperationException($"Failed to generate valid WashingId from: {washingIdString}");
+            }
+
+            return washingId;
         }
     }
 }
