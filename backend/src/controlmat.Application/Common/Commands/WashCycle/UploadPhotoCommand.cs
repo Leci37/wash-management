@@ -7,7 +7,12 @@ using Controlmat.Domain.Entities;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Controlmat.Application.Common.Constants;
+
+using System.ComponentModel.DataAnnotations;
 using Controlmat.Application.Common.Exceptions;
+using System.Linq;
+using System.IO;
+
 
 namespace Controlmat.Application.Common.Commands.WashCycle;
 
@@ -67,20 +72,20 @@ public static class UploadPhotoCommand
                 if (file == null)
                 {
                     _logger.LogWarning("⚠️ {Function} [Thread:{ThreadId}] - NO FILE PROVIDED. WashingId: {WashingId}", function, threadId, washingId);
-                    throw new ArgumentException(ValidationErrorMessages.Photo.FileRequired);
+                    throw new ValidationException(ValidationErrorMessages.Photo.FileRequired);
                 }
 
                 if (file.Length == 0)
                 {
                     _logger.LogWarning("⚠️ {Function} [Thread:{ThreadId}] - EMPTY FILE. WashingId: {WashingId}", function, threadId, washingId);
-                    throw new ArgumentException(ValidationErrorMessages.Photo.FileEmpty);
+                    throw new ValidationException(ValidationErrorMessages.Photo.FileEmpty);
                 }
 
                 if (!string.IsNullOrEmpty(description) && description.Length > 200)
-                    throw new ArgumentException(ValidationErrorMessages.Photo.DescriptionTooLong(200));
+                    throw new ValidationException(ValidationErrorMessages.Photo.DescriptionTooLong(200));
 
                 if (!IsValidWashingId(washingId))
-                    throw new ArgumentException(ValidationErrorMessages.Washing.InvalidIdFormat(washingId));
+                    throw new ValidationException(ValidationErrorMessages.Washing.InvalidIdFormat(washingId));
 
                 var washing = await _washingRepo.GetByIdAsync(washingId);
                 if (washing == null)
@@ -97,24 +102,43 @@ public static class UploadPhotoCommand
                 if (currentPhotoCount >= MaxPhotosPerWash)
                     throw new InvalidOperationException(ValidationErrorMessages.Photo.MaxPhotosReached(washingId, MaxPhotosPerWash));
 
+                var nextSequence = currentPhotoCount + 1;
+                await ValidatePhotoSequence(washingId, nextSequence);
+
+                var sequenceNumber = nextSequence.ToString("D2");
+                var expectedFileName = $"{washingId}_{sequenceNumber}.jpg";
+
+                var fileExtension = Path.GetExtension(file.FileName).ToLower();
+                if (fileExtension != ".jpg" && fileExtension != ".jpeg")
+                {
+                    _logger.LogWarning("⚠️ Invalid file extension: {Extension}", fileExtension);
+                    throw new ValidationException(ValidationErrorMessages.Photo.InvalidFileType(file.ContentType));
+                }
+
                 var contentType = file.ContentType?.ToLower() ?? string.Empty;
                 if (!AllowedContentTypes.Contains(contentType))
-                    throw new ArgumentException(ValidationErrorMessages.Photo.InvalidFileType(contentType));
+                    throw new ValidationException(ValidationErrorMessages.Photo.InvalidFileType(contentType));
 
                 if (file.Length > MaxFileSizeBytes)
-                    throw new ArgumentException(ValidationErrorMessages.Photo.FileSizeExceeded(file.Length, 5));
+                    throw new ValidationException(ValidationErrorMessages.Photo.FileSizeExceeded(file.Length, 5));
 
                 if (!IsValidImage(file))
-                    throw new ArgumentException(ValidationErrorMessages.Photo.InvalidImageContent);
+                    throw new ValidationException(ValidationErrorMessages.Photo.InvalidImageContent);
+
+                var standardizedFileName = $"{washingId}_{sequenceNumber}.jpg";
+                var namingPattern = @"^[0-9]{8}_[0-9]{2}\.jpg$";
+                if (!Regex.IsMatch(standardizedFileName, namingPattern))
+                {
+                    _logger.LogWarning("⚠️ Invalid photo naming pattern: {FileName}", standardizedFileName);
+                    throw new ValidationException(ValidationErrorMessages.Photo.InvalidNamingSequence(expectedFileName, standardizedFileName));
+                }
 
                 var imageBasePath = await _paramRepo.GetValueAsync("ImagePath") ?? "C:\\SumiSan\\Photos";
                 var currentYear = DateTime.Now.Year.ToString();
                 var yearPath = Path.Combine(imageBasePath, currentYear);
                 Directory.CreateDirectory(yearPath);
 
-                var nextSequence = currentPhotoCount + 1;
-                var fileName = $"{washingId}_{nextSequence:00}.jpg";
-                var fullFilePath = Path.Combine(yearPath, fileName);
+                var fullFilePath = Path.Combine(yearPath, standardizedFileName);
 
                 using (var fileStream = new FileStream(fullFilePath, FileMode.Create))
                 {
@@ -124,7 +148,7 @@ public static class UploadPhotoCommand
                 var photo = new Photo
                 {
                     WashingId = washingId,
-                    FileName = fileName,
+                    FileName = standardizedFileName,
                     FilePath = fullFilePath,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -132,13 +156,19 @@ public static class UploadPhotoCommand
                 await _photoRepo.AddAsync(photo);
 
                 _logger.LogInformation("✅ {Function} [Thread:{ThreadId}] - COMPLETED. WashingId: {WashingId}, FileName: {FileName}, FilePath: {FilePath}",
-                    function, threadId, washingId, fileName, fullFilePath);
+                    function, threadId, washingId, standardizedFileName, fullFilePath);
 
-                return fileName;
+                return standardizedFileName;
             }
-            catch (ArgumentException ex)
+            catch (ValidationException ex)
             {
                 _logger.LogWarning(ex, "⚠️ {Function} [Thread:{ThreadId}] - VALIDATION ERROR. WashingId: {WashingId}",
+                    function, threadId, washingId);
+                throw;
+            }
+            catch (ConflictException ex)
+            {
+                _logger.LogWarning(ex, "⚠️ {Function} [Thread:{ThreadId}] - CONFLICT. WashingId: {WashingId}",
                     function, threadId, washingId);
                 throw;
             }
@@ -159,6 +189,17 @@ public static class UploadPhotoCommand
                 _logger.LogError(ex, "❌ {Function} [Thread:{ThreadId}] - ERROR. WashingId: {WashingId}",
                     function, threadId, washingId);
                 throw;
+            }
+        }
+
+        private async Task ValidatePhotoSequence(long washingId, int expectedSequence)
+        {
+            var existingPhotos = await _photoRepo.GetByWashingIdAsync(washingId);
+            var expectedFileName = $"{washingId}_{expectedSequence:D2}.jpg";
+
+            if (existingPhotos.Any(p => p.FileName == expectedFileName))
+            {
+                throw new ConflictException(ValidationErrorMessages.Photo.InvalidNamingSequence(expectedFileName, "already exists"));
             }
         }
 
