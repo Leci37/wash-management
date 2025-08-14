@@ -9,5 +9,6 @@ public interface IMachineRepository
 {
     Task<Machine?> GetByIdAsync(short machineId);
     Task<IEnumerable<Machine>> GetAllAsync();
+    Task<bool> ExistsAsync(int machineId);
 
 }
