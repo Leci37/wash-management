@@ -37,8 +37,13 @@ public static class StartWashCommand
                 var dto = request.Dto;
                 _logger.LogInformation("Starting wash: MachineId={MachineId}, StartUserId={StartUserId}", dto.MachineId, dto.StartUserId);
 
+                // Generate proper WashingId in YYMMDDXX format
+                var washingId = await GenerateWashingIdAsync();
+                _logger.LogInformation("📋 Generated WashingId: {WashingId}", washingId);
+
                 var washing = new WashingEntity
                 {
+                    WashingId = washingId,
                     MachineId = dto.MachineId,
                     StartUserId = dto.StartUserId,
                     StartDate = DateTime.UtcNow,
@@ -62,6 +67,15 @@ public static class StartWashCommand
                 _logger.LogError(ex, "Error starting wash");
                 throw;
             }
+        }
+
+        private async Task<long> GenerateWashingIdAsync()
+        {
+            var today = DateTime.UtcNow.Date;
+            var prefix = today.ToString("yyMMdd");
+            var maxId = await _washingRepo.GetMaxWashingIdByDateAsync(today);
+            var sequence = (maxId.HasValue ? (int)(maxId.Value % 100) : 0) + 1;
+            return long.Parse($"{prefix}{sequence:D2}");
         }
     }
 }
