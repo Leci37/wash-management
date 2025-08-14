@@ -176,7 +176,7 @@ namespace Controlmat.Api.Controllers
         [HttpGet("{washId}/photos/download")]
         public async Task<IActionResult> DownloadWashPhotos(long washId)
         {
-            var result = await _mediator.Send(new DownloadWashPhotosQuery.Request(washId));
+            var result = await _mediator.Send(new DownloadPhotosZipQuery.Request(washId));
             if (result == null)
                 return NotFound("No photos found for this wash");
 
