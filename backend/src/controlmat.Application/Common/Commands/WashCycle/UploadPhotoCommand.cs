@@ -5,6 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Controlmat.Domain.Interfaces;
 using Controlmat.Domain.Entities;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
+using Controlmat.Application.Common.Constants;
 
 namespace Controlmat.Application.Common.Commands.WashCycle;
 
@@ -59,50 +61,46 @@ public static class UploadPhotoCommand
             try
             {
                 var currentUser = GetCurrentUserFromClaims();
+                var description = request.Description;
 
-                if (file == null || file.Length == 0)
+                if (file == null)
                 {
-                    _logger.LogWarning("⚠️ {Function} [Thread:{ThreadId}] - NO FILE PROVIDED. WashingId: {WashingId}",
-                        function, threadId, washingId);
-                    throw new ArgumentException("File is required");
+                    _logger.LogWarning("⚠️ {Function} [Thread:{ThreadId}] - NO FILE PROVIDED. WashingId: {WashingId}", function, threadId, washingId);
+                    throw new ArgumentException(ValidationErrorMessages.Photo.FileRequired);
                 }
+
+                if (file.Length == 0)
+                {
+                    _logger.LogWarning("⚠️ {Function} [Thread:{ThreadId}] - EMPTY FILE. WashingId: {WashingId}", function, threadId, washingId);
+                    throw new ArgumentException(ValidationErrorMessages.Photo.FileEmpty);
+                }
+
+                if (!string.IsNullOrEmpty(description) && description.Length > 200)
+                    throw new ArgumentException(ValidationErrorMessages.Photo.DescriptionTooLong(200));
+
+                if (!IsValidWashingId(washingId))
+                    throw new ArgumentException(ValidationErrorMessages.Washing.InvalidIdFormat(washingId));
 
                 var washing = await _washingRepo.GetByIdAsync(washingId);
                 if (washing == null)
-                {
-                    _logger.LogWarning("⚠️ {Function} [Thread:{ThreadId}] - WASHING NOT FOUND. WashingId: {WashingId}",
-                        function, threadId, washingId);
-                    throw new InvalidOperationException($"Washing with ID {washingId} not found");
-                }
+                    throw new InvalidOperationException(ValidationErrorMessages.Washing.NotFound(washingId));
 
                 if (washing.Status != 'P')
-                {
-                    _logger.LogWarning("⚠️ {Function} [Thread:{ThreadId}] - WASHING NOT IN PROGRESS. WashingId: {WashingId}, Status: {Status}",
-                        function, threadId, washingId, washing.Status);
-                    throw new InvalidOperationException($"Cannot upload photos to finished wash {washingId}");
-                }
+                    throw new InvalidOperationException(ValidationErrorMessages.Washing.AlreadyFinished(washingId));
 
                 var currentPhotoCount = await _photoRepo.CountByWashingIdAsync(washingId);
                 if (currentPhotoCount >= MaxPhotosPerWash)
-                {
-                    _logger.LogWarning("⚠️ {Function} [Thread:{ThreadId}] - PHOTO LIMIT EXCEEDED. WashingId: {WashingId}, Current: {Count}",
-                        function, threadId, washingId, currentPhotoCount);
-                    throw new InvalidOperationException($"Maximum {MaxPhotosPerWash} photos allowed per wash");
-                }
+                    throw new InvalidOperationException(ValidationErrorMessages.Photo.MaxPhotosReached(washingId, MaxPhotosPerWash));
 
-                if (!AllowedContentTypes.Contains(file.ContentType?.ToLower()))
-                {
-                    _logger.LogWarning("⚠️ {Function} [Thread:{ThreadId}] - INVALID FILE TYPE. ContentType: {ContentType}",
-                        function, threadId, file.ContentType);
-                    throw new ArgumentException($"File type {file.ContentType} not allowed. Use JPEG or PNG");
-                }
+                var contentType = file.ContentType?.ToLower() ?? string.Empty;
+                if (!AllowedContentTypes.Contains(contentType))
+                    throw new ArgumentException(ValidationErrorMessages.Photo.InvalidFileType(contentType));
 
                 if (file.Length > MaxFileSizeBytes)
-                {
-                    _logger.LogWarning("⚠️ {Function} [Thread:{ThreadId}] - FILE TOO LARGE. Size: {Size} bytes",
-                        function, threadId, file.Length);
-                    throw new ArgumentException($"File size exceeds {MaxFileSizeBytes / (1024 * 1024)}MB limit");
-                }
+                    throw new ArgumentException(ValidationErrorMessages.Photo.FileSizeExceeded(file.Length, 5));
+
+                if (!IsValidImage(file))
+                    throw new ArgumentException(ValidationErrorMessages.Photo.InvalidImageContent);
 
                 var imageBasePath = await _paramRepo.GetValueAsync("ImagePath") ?? "C:\\SumiSan\\Photos";
                 var currentYear = DateTime.Now.Year.ToString();
@@ -159,6 +157,40 @@ public static class UploadPhotoCommand
             return user?.FindFirst("preferred_username")?.Value
                 ?? user?.FindFirst(ClaimTypes.Name)?.Value
                 ?? user?.FindFirst("name")?.Value;
+        }
+
+        private static bool IsValidWashingId(long washingId)
+        {
+            var idStr = washingId.ToString();
+            if (!Regex.IsMatch(idStr, @"^\d{8}$"))
+                return false;
+            return DateTime.TryParseExact(idStr.Substring(0, 6), "yyMMdd", null, System.Globalization.DateTimeStyles.None, out _);
+        }
+
+        private static bool IsValidImage(IFormFile file)
+        {
+            try
+            {
+                using var stream = file.OpenReadStream();
+                Span<byte> header = stackalloc byte[8];
+                if (stream.Read(header) < 8)
+                    return false;
+
+                // JPEG signature FF D8 FF
+                if (header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF)
+                    return true;
+
+                // PNG signature 89 50 4E 47 0D 0A 1A 0A
+                if (header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47 &&
+                    header[4] == 0x0D && header[5] == 0x0A && header[6] == 0x1A && header[7] == 0x0A)
+                    return true;
+
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
