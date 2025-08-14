@@ -5,7 +5,6 @@ using Controlmat.Application.Common.Commands.WashCycle;
 using Controlmat.Application.Common.Queries.Washing;
 using Controlmat.Application.Common.Dto;
 using System.ComponentModel.DataAnnotations;
-using Controlmat.Application.Common.Exceptions;
 
 namespace Controlmat.Api.Controllers
 {
@@ -207,37 +206,25 @@ namespace Controlmat.Api.Controllers
         /// <response code="404">Wash not found</response>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(WashingResponseDto), 200)]
-        [ProducesResponseType(typeof(ProblemDetails), 400)]
         [ProducesResponseType(typeof(ProblemDetails), 404)]
         public async Task<IActionResult> GetWashById([Required] long id)
         {
             _logger.LogInformation("📝 GET /api/washing/{WashingId}", id);
 
-            try
+            var result = await _mediator.Send(new GetWashByIdQuery.Request { WashingId = id });
+            
+            if (result == null)
             {
-                var result = await _mediator.Send(new GetWashByIdQuery.Request { WashingId = id });
-                return Ok(result);
-            }
-            catch (ValidationException ex)
-            {
-                _logger.LogWarning("⚠️ Invalid washing ID: {Message}", ex.Message);
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "Invalid Washing ID",
-                    Detail = ex.Message,
-                    Status = 400
+                _logger.LogWarning("⚠️ Wash not found: {WashingId}", id);
+                return NotFound(new ProblemDetails 
+                { 
+                    Title = "Wash Not Found", 
+                    Detail = $"Washing with ID {id} was not found",
+                    Status = 404 
                 });
             }
-            catch (NotFoundException ex)
-            {
-                _logger.LogWarning("⚠️ Wash not found: {Message}", ex.Message);
-                return NotFound(new ProblemDetails
-                {
-                    Title = "Wash Not Found",
-                    Detail = ex.Message,
-                    Status = 404
-                });
-            }
+
+            return Ok(result);
         }
     }
 }
