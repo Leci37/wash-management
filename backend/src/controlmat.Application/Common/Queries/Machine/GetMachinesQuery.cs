@@ -43,7 +43,7 @@ public static class GetMachinesQuery
 
                 foreach (var machine in result)
                 {
-                    machine.IsAvailable = !await _washingRepo.IsMachineInUseAsync((short)machine.Id);
+                    machine.IsAvailable = !await _washingRepo.IsMachineInUseAsync(machine.Id);
                 }
 
                 _logger.LogInformation("✅ {Function} [Thread:{ThreadId}] - COMPLETED. MachineCount: {Count}",

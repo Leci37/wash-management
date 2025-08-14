@@ -8,6 +8,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Controlmat.Application.Common.Exceptions;
 
 namespace Controlmat.Application.Common.Commands.WashCycle;
 
@@ -43,6 +44,8 @@ public static class FinishWashCommand
 
         public async Task<WashingResponseDto> Handle(Request request, CancellationToken cancellationToken)
         {
+            var function = nameof(Handle);
+
             try
             {
                 _logger.LogInformation("Finishing wash {WashingId} by user {EndUserId}", request.WashingId, request.Dto.EndUserId);
@@ -57,16 +60,27 @@ public static class FinishWashCommand
                 var washing = await _washingRepo.GetByIdAsync(request.WashingId);
                 if (washing == null)
                 {
-                    throw new ValidationException(ValidationErrorMessages.Washing.NotFound(request.WashingId));
+                    throw new NotFoundException(ValidationErrorMessages.Washing.NotFound(request.WashingId));
+                }
+
+                if (washing.Status == 'F')
+                {
+                    _logger.LogWarning("⚠️ Washing already finished: {WashingId}", request.WashingId);
+                    throw new ConflictException(ValidationErrorMessages.Washing.AlreadyFinished(request.WashingId));
                 }
 
                 if (washing.Status != 'P')
                 {
-                    throw new ValidationException(ValidationErrorMessages.Washing.NotInProgress(request.WashingId));
+                    _logger.LogWarning("⚠️ Invalid status transition from '{CurrentStatus}' to 'F' for washing: {WashingId}",
+                        washing.Status, request.WashingId);
+                    throw new ConflictException(ValidationErrorMessages.Washing.InvalidStatusTransition(washing.Status, 'F'));
                 }
 
-                if (!await _userRepo.ExistsAsync(request.Dto.EndUserId))
+                // Validate end user exists in database
+                var endUserExists = await _userRepo.ExistsAsync(request.Dto.EndUserId);
+                if (!endUserExists)
                 {
+                    _logger.LogWarning("⚠️ {Function} - End user not found: {EndUserId}", function, request.Dto.EndUserId);
                     throw new ValidationException(ValidationErrorMessages.User.EndUserNotFound(request.Dto.EndUserId));
                 }
 

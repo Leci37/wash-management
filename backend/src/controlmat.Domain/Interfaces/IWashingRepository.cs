@@ -15,7 +15,8 @@ public interface IWashingRepository
     Task<List<Washing>> GetActiveWashesAsync();
     Task<Washing?> GetActiveWashByMachineAsync(int machineId);
     Task<int> CountActiveAsync();
-    Task<bool> IsMachineInUseAsync(short machineId);
+    Task<bool> IsMachineInUseAsync(int machineId);
+    Task<List<Washing>> GetActiveWashesByMachineAsync(int machineId);
     Task<long?> GetMaxWashingIdByDateAsync(DateTime date);
     /// <summary>
     /// Gets all WashingIds that start with the given date prefix (YYMMDD)

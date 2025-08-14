@@ -67,14 +67,28 @@ public static class StartWashCommand
                     throw new ValidationException(ValidationErrorMessages.Machine.NotFound(dto.MachineId));
                 }
 
-                if (await _washingRepo.IsMachineInUseAsync(dto.MachineId))
+                // Validate maximum concurrent washes before starting new wash
+                var activeWashCount = await _washingRepo.CountActiveAsync();
+                if (activeWashCount >= 2)
                 {
+                    _logger.LogWarning("⚠️ Maximum concurrent washes reached: {ActiveCount}/2", activeWashCount);
+                    throw new ConflictException(ValidationErrorMessages.Washing.MaxActiveWashesReached);
+                }
+
+                // Validate machine is not already in use
+                var isMachineInUse = await _washingRepo.IsMachineInUseAsync(dto.MachineId);
+                if (isMachineInUse)
+                {
+                    _logger.LogWarning("⚠️ Machine already in use: {MachineId}", dto.MachineId);
                     throw new ConflictException(ValidationErrorMessages.Machine.AlreadyInUse(dto.MachineId));
                 }
 
-                if (await _washingRepo.CountActiveAsync() >= 2)
+                // Double-check concurrent limit with machine-specific validation
+                var activeMachineWashes = await _washingRepo.GetActiveWashesByMachineAsync(dto.MachineId);
+                if (activeMachineWashes.Any())
                 {
-                    throw new ConflictException(ValidationErrorMessages.Washing.MaxActiveWashesReached);
+                    _logger.LogWarning("⚠️ Machine has active wash: {MachineId}", dto.MachineId);
+                    throw new ConflictException(ValidationErrorMessages.BusinessRules.OnlyOneWashPerMachine);
                 }
 
                 if (dto.ProtEntries == null || !dto.ProtEntries.Any())
