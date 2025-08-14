@@ -1,7 +1,12 @@
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using System.Text.RegularExpressions;
+using Controlmat.Application.Common.Constants;
 using Controlmat.Application.Common.Dto;
+using Controlmat.Application.Common.Exceptions;
 using Controlmat.Domain.Interfaces;
 
 namespace Controlmat.Application.Common.Queries.Washing;
@@ -40,12 +45,19 @@ public static class GetWashByIdQuery
 
             try
             {
+                if (!IsValidWashingId(washingId))
+                {
+                    _logger.LogWarning("⚠️ {Function} [Thread:{ThreadId}] - INVALID WASHING ID FORMAT. WashingId: {WashingId}",
+                        function, threadId, washingId);
+                    throw new ValidationException(ValidationErrorMessages.Washing.InvalidIdFormat(washingId));
+                }
+
                 var washing = await _washingRepo.GetByIdWithDetailsAsync(washingId);
                 if (washing == null)
                 {
                     _logger.LogWarning("⚠️ {Function} [Thread:{ThreadId}] - WASHING NOT FOUND. WashingId: {WashingId}",
                         function, threadId, washingId);
-                    return null;
+                    throw new NotFoundException(ValidationErrorMessages.Washing.NotFound(washingId));
                 }
 
                 var result = _mapper.Map<WashingResponseDto>(washing);
@@ -61,6 +73,14 @@ public static class GetWashByIdQuery
                     function, threadId, washingId);
                 throw;
             }
+        }
+
+        private static bool IsValidWashingId(long washingId)
+        {
+            var idStr = washingId.ToString();
+            if (!Regex.IsMatch(idStr, @"^\d{8}$"))
+                return false;
+            return DateTime.TryParseExact(idStr.Substring(0, 6), "yyMMdd", null, DateTimeStyles.None, out _);
         }
     }
 }
