@@ -14,6 +14,7 @@ public class PhotoConfiguration : IEntityTypeConfiguration<Photo>
         builder.Property(x => x.FileName).IsRequired().HasMaxLength(255);
         builder.Property(x => x.FilePath).IsRequired().HasMaxLength(255);
         builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.Description).HasMaxLength(200);
         builder.HasOne(x => x.Washing).WithMany(x => x.Photos).HasForeignKey(x => x.WashingId);
     }
 }

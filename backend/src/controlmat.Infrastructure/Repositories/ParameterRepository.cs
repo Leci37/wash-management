@@ -1,29 +1,36 @@
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Controlmat.Domain.Entities;
-using Controlmat.Domain.Interfaces;
+using Controlmat.Domain.Repositories;
 using Controlmat.Infrastructure.Persistence;
 
-namespace Controlmat.Infrastructure.Repositories
+namespace Controlmat.Infrastructure.Repositories;
+
+public class ParameterRepository : IParameterRepository
 {
-    public class ParameterRepository : IParameterRepository
+    private readonly SumisanDbContext _context;
+
+    public ParameterRepository(SumisanDbContext context)
     {
-        private readonly SumisanDbContext _context;
+        _context = context;
+    }
 
-        public ParameterRepository(SumisanDbContext context)
-        {
-            _context = context;
-        }
+    public async Task<string> GetImagePathAsync()
+    {
+        var parameter = await _context.Parameters
+            .FirstOrDefaultAsync(p => p.Name == "ImagePath");
+        return parameter?.Value ?? "/shared/photos";
+    }
 
-        public async Task<Parameter?> GetByNameAsync(string name)
-        {
-            return await _context.Parameters.FirstOrDefaultAsync(p => p.Name == name);
-        }
+    public async Task<int> GetMaxPhotosPerWashAsync()
+    {
+        var parameter = await _context.Parameters
+            .FirstOrDefaultAsync(p => p.Name == "MaxPhotosPerWash");
+        return int.TryParse(parameter?.Value, out var max) ? max : 99;
+    }
 
-        public async Task<string?> GetValueAsync(string name)
-        {
-            var parameter = await GetByNameAsync(name);
-            return parameter?.Value;
-        }
+    public async Task<string[]> GetSupportedFileTypesAsync()
+    {
+        var parameter = await _context.Parameters
+            .FirstOrDefaultAsync(p => p.Name == "SupportedFileTypes");
+        return parameter?.Value?.Split(',') ?? new[] { "jpg", "png" };
     }
 }

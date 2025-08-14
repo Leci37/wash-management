@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Controlmat.Domain.Interfaces;
+using Controlmat.Domain.Repositories;
 using Controlmat.Infrastructure.Persistence;
 using Controlmat.Infrastructure.Repositories;
 
