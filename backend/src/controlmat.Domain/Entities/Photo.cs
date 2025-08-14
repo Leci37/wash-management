@@ -9,6 +9,7 @@ public class Photo
     public string FileName { get; set; } = string.Empty;
     public string FilePath { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public string? Description { get; set; }
 
     public Washing Washing { get; set; } = default!;
 }

@@ -123,6 +123,9 @@ namespace Controlmat.Infrastructure.Persistence
                     .IsRequired()
                     .HasMaxLength(255);
 
+                entity.Property(e => e.Description)
+                    .HasMaxLength(200);
+
                 entity.Property(e => e.CreatedAt)
                     .IsRequired()
                     .HasColumnType("datetime")

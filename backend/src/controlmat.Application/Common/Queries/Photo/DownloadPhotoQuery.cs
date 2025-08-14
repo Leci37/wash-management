@@ -1,7 +1,10 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Controlmat.Application.Common.Constants;
 using Controlmat.Application.Common.Dto;
+using Controlmat.Application.Common.Exceptions;
 using Controlmat.Domain.Interfaces;
+using Controlmat.Domain.Repositories;
 using System.IO;
 
 namespace Controlmat.Application.Common.Queries.Photo;
@@ -13,11 +16,13 @@ public static class DownloadPhotoQuery
     public class Handler : IRequestHandler<Request, PhotoDownloadDto?>
     {
         private readonly IPhotoRepository _repository;
+        private readonly IParameterRepository _parameterRepository;
         private readonly ILogger<Handler> _logger;
 
-        public Handler(IPhotoRepository repository, ILogger<Handler> logger)
+        public Handler(IPhotoRepository repository, IParameterRepository parameterRepository, ILogger<Handler> logger)
         {
             _repository = repository;
+            _parameterRepository = parameterRepository;
             _logger = logger;
         }
 
@@ -25,20 +30,17 @@ public static class DownloadPhotoQuery
         {
             _logger.LogInformation("🌀 DownloadPhotoQuery - STARTED. PhotoId: {PhotoId}", request.PhotoId);
 
+            var imagePath = await _parameterRepository.GetImagePathAsync();
             var photo = await _repository.GetByIdAsync(request.PhotoId);
             if (photo == null)
-            {
-                _logger.LogWarning("⚠️ Photo not found: {PhotoId}", request.PhotoId);
-                return null;
-            }
+                throw new NotFoundException(ValidationErrorMessages.Photo.NotFound(request.PhotoId));
 
-            if (!File.Exists(photo.FilePath))
-            {
-                _logger.LogError("❌ Photo file not found on disk: {FilePath}", photo.FilePath);
-                return null;
-            }
+            var year = photo.CreatedAt.Year.ToString();
+            var fullPath = Path.Combine(imagePath, year, photo.FileName);
+            if (!File.Exists(fullPath))
+                throw new NotFoundException(ValidationErrorMessages.Photo.FileNotFound(photo.FileName));
 
-            var fileBytes = await File.ReadAllBytesAsync(photo.FilePath, ct);
+            var fileBytes = await File.ReadAllBytesAsync(fullPath, ct);
             var contentType = Path.GetExtension(photo.FileName).ToLower() switch
             {
                 ".jpg" or ".jpeg" => "image/jpeg",
