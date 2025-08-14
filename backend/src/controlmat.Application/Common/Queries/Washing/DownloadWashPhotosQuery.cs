@@ -1,10 +1,12 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using Controlmat.Application.Common.Constants;
 using Controlmat.Application.Common.Dto;
 using Controlmat.Domain.Interfaces;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 
 namespace Controlmat.Application.Common.Queries.Washing;
 
@@ -14,12 +16,14 @@ public static class DownloadWashPhotosQuery
 
     public class Handler : IRequestHandler<Request, WashPhotosZipDto?>
     {
-        private readonly IPhotoRepository _repository;
+        private readonly IPhotoRepository _photoRepository;
+        private readonly IWashingRepository _washingRepository;
         private readonly ILogger<Handler> _logger;
 
-        public Handler(IPhotoRepository repository, ILogger<Handler> logger)
+        public Handler(IPhotoRepository photoRepository, IWashingRepository washingRepository, ILogger<Handler> logger)
         {
-            _repository = repository;
+            _photoRepository = photoRepository;
+            _washingRepository = washingRepository;
             _logger = logger;
         }
 
@@ -27,11 +31,31 @@ public static class DownloadWashPhotosQuery
         {
             _logger.LogInformation("🌀 DownloadWashPhotosQuery - STARTED. WashId: {WashId}", request.WashId);
 
-            var photos = await _repository.GetByWashingIdAsync(request.WashId);
-            if (!photos.Any())
+            var washIdStr = request.WashId.ToString();
+            if (washIdStr.Length != 8 || !DateTime.TryParseExact(washIdStr.Substring(0, 6), "yyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
             {
-                _logger.LogWarning("⚠️ No photos found for wash: {WashId}", request.WashId);
-                return null;
+                throw new ValidationException(ValidationErrorMessages.Washing.InvalidIdFormat(request.WashId));
+            }
+
+            var washing = await _washingRepository.GetByIdAsync(request.WashId);
+            if (washing == null)
+            {
+                throw new ValidationException(ValidationErrorMessages.Washing.NotFound(request.WashId));
+            }
+
+            var photoCount = await _photoRepository.CountByWashingIdAsync(request.WashId);
+            if (photoCount == 0)
+            {
+                throw new ValidationException(ValidationErrorMessages.Photo.NoPhotosForWash(request.WashId));
+            }
+
+            var photos = await _photoRepository.GetByWashingIdAsync(request.WashId);
+            foreach (var photo in photos)
+            {
+                if (!File.Exists(photo.FilePath))
+                {
+                    throw new ValidationException(ValidationErrorMessages.Photo.FileNotFound(photo.FileName));
+                }
             }
 
             using var memoryStream = new MemoryStream();
@@ -39,17 +63,10 @@ public static class DownloadWashPhotosQuery
             {
                 foreach (var photo in photos)
                 {
-                    if (File.Exists(photo.FilePath))
-                    {
-                        var entry = archive.CreateEntry(photo.FileName);
-                        using var entryStream = entry.Open();
-                        using var fileStream = File.OpenRead(photo.FilePath);
-                        await fileStream.CopyToAsync(entryStream, ct);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("⚠️ Photo file not found: {FilePath}", photo.FilePath);
-                    }
+                    var entry = archive.CreateEntry(photo.FileName);
+                    using var entryStream = entry.Open();
+                    using var fileStream = File.OpenRead(photo.FilePath);
+                    await fileStream.CopyToAsync(entryStream, ct);
                 }
             }
 
