@@ -9,6 +9,7 @@ using Controlmat.Domain.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.RegularExpressions;
+
 using System;
 using WashingEntity = Controlmat.Domain.Entities.Washing;
 
@@ -24,6 +25,7 @@ public static class StartWashCommand
     public class Handler : IRequestHandler<Request, WashingResponseDto>
     {
         private readonly IWashingRepository _washingRepo;
+
         private readonly IMachineRepository _machineRepo;
         private readonly IUserRepository _userRepo;
         private readonly IMapper _mapper;
@@ -49,6 +51,7 @@ public static class StartWashCommand
             {
                 var dto = request.Dto;
                 _logger.LogInformation("Starting wash: MachineId={MachineId}, StartUserId={StartUserId}", dto.MachineId, dto.StartUserId);
+
 
                 if (!await _userRepo.ExistsAsync(dto.StartUserId))
                 {
@@ -136,6 +139,7 @@ public static class StartWashCommand
                 throw;
             }
         }
+
 
         private async Task<long> GenerateWashingIdAsync()
         {

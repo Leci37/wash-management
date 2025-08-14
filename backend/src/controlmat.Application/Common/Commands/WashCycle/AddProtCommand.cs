@@ -1,3 +1,4 @@
+
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -10,10 +11,12 @@ using Controlmat.Application.Common.Dto;
 using Controlmat.Domain.Entities;
 using Controlmat.Domain.Interfaces;
 
+
 namespace Controlmat.Application.Common.Commands.WashCycle;
 
 public static class AddProtCommand
 {
+
     public class Request : IRequest<ProtDto>
     {
         public long WashingId { get; set; }
@@ -87,5 +90,6 @@ public static class AddProtCommand
                 return false;
             return DateTime.TryParseExact(idStr.Substring(0, 6), "yyMMdd", null, System.Globalization.DateTimeStyles.None, out _);
         }
+
     }
 }
