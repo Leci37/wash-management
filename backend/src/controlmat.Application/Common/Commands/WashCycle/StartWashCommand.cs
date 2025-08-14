@@ -31,6 +31,10 @@ public static class StartWashCommand
         private readonly IMapper _mapper;
         private readonly ILogger<Handler> _logger;
 
+        private static readonly Regex ProtIdRegex = new("^PROT[0-9]{3}$", RegexOptions.Compiled);
+        private static readonly Regex BatchNumberRegex = new("^NL[0-9]{2}$", RegexOptions.Compiled);
+        private static readonly Regex BagNumberRegex = new("^[0-9]{2}/[0-9]{2}$", RegexOptions.Compiled);
+
         public Handler(
             IWashingRepository washingRepo,
             IMachineRepository machineRepo,
@@ -81,17 +85,17 @@ public static class StartWashCommand
                 var protKeys = new HashSet<string>();
                 foreach (var p in dto.ProtEntries)
                 {
-                    if (!Regex.IsMatch(p.ProtId, @"^PROT[0-9]{3}$"))
+                    if (!ProtIdRegex.IsMatch(p.ProtId))
                     {
                         throw new ValidationException(ValidationErrorMessages.Prot.InvalidProtIdFormat(p.ProtId));
                     }
 
-                    if (!Regex.IsMatch(p.BatchNumber, @"^NL[0-9]{2}$"))
+                    if (!BatchNumberRegex.IsMatch(p.BatchNumber))
                     {
                         throw new ValidationException(ValidationErrorMessages.Prot.InvalidBatchNumberFormat(p.BatchNumber));
                     }
 
-                    if (!Regex.IsMatch(p.BagNumber, @"^[0-9]{2}/[0-9]{2}$"))
+                    if (!BagNumberRegex.IsMatch(p.BagNumber))
                     {
                         throw new ValidationException(ValidationErrorMessages.Prot.InvalidBagNumberFormat(p.BagNumber));
                     }
