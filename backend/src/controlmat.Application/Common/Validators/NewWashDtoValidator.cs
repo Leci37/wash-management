@@ -1,5 +1,6 @@
 using FluentValidation;
 using Controlmat.Application.Common.Dto;
+using System.Linq;
 
 namespace Controlmat.Application.Common.Validators;
 
@@ -17,9 +18,10 @@ public class NewWashDtoValidator : AbstractValidator<NewWashDto>
             .GreaterThan(0).WithMessage("StartUserId must be a positive number");
 
         RuleFor(x => x.ProtEntries)
-            .NotEmpty().WithMessage("At least one PROT entry is required")
-            .Must(prots => prots != null && prots.Count >= 1)
-            .WithMessage("At least one PROT entry is required");
+            .NotEmpty()
+            .WithMessage("At least one PROT entry is required")
+            .Must(prots => prots != null && prots.Any())
+            .WithMessage("ProtEntries cannot be empty");
 
         RuleFor(x => x.StartObservation)
             .MaximumLength(100).WithMessage("StartObservation cannot exceed 100 characters");
