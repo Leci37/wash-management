@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Controlmat.Application.Common.Dto;
 using Controlmat.Domain.Interfaces;
+using Controlmat.Domain.Repositories;
 using System.IO;
 
 namespace Controlmat.Application.Common.Queries.Photo;
@@ -13,11 +14,13 @@ public static class DownloadPhotoQuery
     public class Handler : IRequestHandler<Request, PhotoDownloadDto?>
     {
         private readonly IPhotoRepository _repository;
+        private readonly IParameterRepository _parameterRepository;
         private readonly ILogger<Handler> _logger;
 
-        public Handler(IPhotoRepository repository, ILogger<Handler> logger)
+        public Handler(IPhotoRepository repository, IParameterRepository parameterRepository, ILogger<Handler> logger)
         {
             _repository = repository;
+            _parameterRepository = parameterRepository;
             _logger = logger;
         }
 
@@ -32,13 +35,17 @@ public static class DownloadPhotoQuery
                 return null;
             }
 
-            if (!File.Exists(photo.FilePath))
+            var imagePath = await _parameterRepository.GetImagePathAsync();
+            var year = photo.CreatedAt.Year.ToString();
+            var fullPath = Path.Combine(imagePath, year, photo.FileName);
+
+            if (!File.Exists(fullPath))
             {
-                _logger.LogError("❌ Photo file not found on disk: {FilePath}", photo.FilePath);
+                _logger.LogError("❌ Photo file not found on disk: {FilePath}", fullPath);
                 return null;
             }
 
-            var fileBytes = await File.ReadAllBytesAsync(photo.FilePath, ct);
+            var fileBytes = await File.ReadAllBytesAsync(fullPath, ct);
             var contentType = Path.GetExtension(photo.FileName).ToLower() switch
             {
                 ".jpg" or ".jpeg" => "image/jpeg",
